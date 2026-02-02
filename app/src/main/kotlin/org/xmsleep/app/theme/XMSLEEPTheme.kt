@@ -60,11 +60,11 @@ fun XMSLEEPTheme(
         onDispose { }
     }
     
-    // 生成配色方案（参考 OpenTune 的逻辑）
+    // 生成配色方案
     val colorScheme = remember(isDark, useBlackBackground, seedColor, useDynamicColor) {
-        // 只有当 seedColor 是默认颜色 且 useDynamicColor = true 时，才使用系统动态颜色
-        if (seedColor == DefaultThemeColor && useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Android 12+ 使用系统动态颜色
+        // 如果启用动态颜色且系统支持（Android 12+），使用系统动态颜色
+        if (useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Android 12+ 使用系统动态颜色（从壁纸提取）
             if (isDark) {
                 dynamicDarkColorScheme(context).pureBlack(useBlackBackground, isDark)
             } else {

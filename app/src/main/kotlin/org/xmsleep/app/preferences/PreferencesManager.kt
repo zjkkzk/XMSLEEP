@@ -175,7 +175,7 @@ object PreferencesManager {
     /**
      * 获取动态颜色设置
      */
-    fun getUseDynamicColor(context: Context, default: Boolean = true): Boolean {
+    fun getUseDynamicColor(context: Context, default: Boolean = false): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(KEY_USE_DYNAMIC_COLOR, default)
     }
