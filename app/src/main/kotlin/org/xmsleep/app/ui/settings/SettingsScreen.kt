@@ -6,11 +6,14 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -19,6 +22,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,7 +46,6 @@ import org.xmsleep.app.ui.BackgroundSelection
 import org.xmsleep.app.preferences.PreferencesManager
 import org.xmsleep.app.update.UpdateDialog
 import org.xmsleep.app.utils.*
-import androidx.compose.ui.res.painterResource
 
 /**
  * 设置页面 - 应用配置和管理
@@ -59,11 +66,13 @@ fun SettingsScreen(
     onNavigateToQuoteHistory: () -> Unit = {},
     pinnedSounds: MutableState<MutableSet<AudioManager.Sound>>,
     favoriteSounds: MutableState<MutableSet<AudioManager.Sound>>,
-    onScrollDetected: () -> Unit = {}
+    onScrollDetected: () -> Unit = {},
+    onContentHiddenChange: (Boolean) -> Unit = {} // 新增：内容隐藏状态回调
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val audioManager = remember { org.xmsleep.app.audio.AudioManager.getInstance() }
+    val timerManager = remember { org.xmsleep.app.timer.TimerManager.getInstance() }
     var showClearCacheDialog by remember { mutableStateOf(false) }
     var isClearingCache by remember { mutableStateOf(false) }
     var cacheSize by remember { mutableStateOf(0L) }
@@ -165,24 +174,89 @@ fun SettingsScreen(
             delay(300) // 每300ms更新一次音量显示
         }
     }
-    Column(
-        modifier = modifier
-            .fillMaxSize()
+    // 灯泡功能状态
+    var isContentHidden by remember { mutableStateOf(false) }
+    var showPullRing by remember { mutableStateOf(false) }
+    
+    // 倒计时状态
+    val isTimerActive by timerManager.isTimerActive.collectAsState()
+    val timeLeftMillis by timerManager.timeLeftMillis.collectAsState()
+    
+    // 监听音频播放状态，自动取消倒计时
+    LaunchedEffect(Unit) {
+        while (true) {
+            val hasAnyPlayingSounds = audioManager.hasAnyPlayingSounds()
+            
+            // 如果没有声音在播放且倒计时是激活状态，自动取消倒计时
+            if (!hasAnyPlayingSounds && isTimerActive) {
+                timerManager.cancelTimer()
+            }
+            
+            delay(1000) // 每秒检查一次
+        }
+    }
+    
+    // 通知 MainScreen 内容隐藏状态变化
+    LaunchedEffect(isContentHidden) {
+        onContentHiddenChange(isContentHidden)
+    }
+    
+    // 内容透明度动画
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isContentHidden) 0f else 1f,
+        animationSpec = tween(durationMillis = 300),
+        label = "content_alpha"
+    )
+    
+    // 拉环掉落动画进度
+    val pullRingProgress by animateFloatAsState(
+        targetValue = if (showPullRing) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "pull_ring_progress"
+    )
+    
+    Box(
+        modifier = modifier.fillMaxSize()
     ) {
-		// 固定标题 + GitHub 按钮
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(horizontal = 16.dp, vertical = 16.dp),
-			horizontalArrangement = Arrangement.SpaceBetween,
-			verticalAlignment = Alignment.CenterVertically
-		) {
-			Text(
-				context.getString(R.string.settings),
-				style = MaterialTheme.typography.headlineMedium,
-				fontWeight = FontWeight.Bold,
-			)
-		}
+        // 主内容层
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = contentAlpha }
+                .then(
+                    // 当内容隐藏时，禁用所有点击事件
+                    if (isContentHidden) {
+                        Modifier.pointerInput(Unit) {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    // 拦截所有触摸事件
+                                    event.changes.forEach { it.consume() }
+                                }
+                            }
+                        }
+                    } else {
+                        Modifier
+                    }
+                )
+        ) {
+            // 固定标题
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    context.getString(R.string.settings),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         
         // 可滚动内容区域
         val scrollState = rememberScrollState()
@@ -430,6 +504,85 @@ fun SettingsScreen(
             )
         )
         }
+    }
+        
+        // 悬浮灯泡按钮层（始终在最上层）
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally // 改为居中对齐
+            ) {
+                // 灯泡按钮（添加圆角矩形背景）
+                Surface(
+                    onClick = { showPullRing = !showPullRing },
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(
+                            imageVector = if (isContentHidden) Icons.Default.LightMode else Icons.Default.Lightbulb,
+                            contentDescription = if (isContentHidden) "显示内容" else "隐藏内容",
+                            tint = if (isContentHidden) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+                
+                // 拉环控制（从灯泡下方掉落，居中对齐）
+                if (showPullRing) {
+                    org.xmsleep.app.ui.components.PullRingControl(
+                        isContentHidden = isContentHidden,
+                        onToggle = {
+                            isContentHidden = !isContentHidden
+                            // 切换后自动收起拉环
+                            showPullRing = false
+                        },
+                        animationProgress = pullRingProgress
+                    )
+                }
+            }
+        }
+        
+        // 倒计时显示（左上角，仅在内容隐藏且倒计时激活时显示）
+        if (isContentHidden && isTimerActive && timeLeftMillis > 0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = 16.dp, start = 16.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = "倒计时",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = formatTimeLeft(timeLeftMillis),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+    }
         
         // 软件更新对话框
         if (showUpdateDialog) {
@@ -720,6 +873,19 @@ fun SettingsScreen(
                 }
             )
         }
-    }
 }
 
+/**
+ * 格式化剩余时间
+ */
+private fun formatTimeLeft(millis: Long): String {
+    val totalSeconds = millis / 1000
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    val seconds = totalSeconds % 60
+    
+    return when {
+        hours > 0 -> String.format("%d:%02d:%02d", hours, minutes, seconds)
+        else -> String.format("%02d:%02d", minutes, seconds)
+    }
+}

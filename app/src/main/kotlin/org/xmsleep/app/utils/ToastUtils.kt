@@ -112,8 +112,9 @@ fun ToastContent(
                 ),
             )
 
+            // 居中显示：水平和垂直都居中
             val x = max(this@BoxWithConstraints.constraints.maxWidth - placeable.width, 0) / 2
-            val y = constraints.maxHeight - placeable.height - px100dp
+            val y = max(constraints.maxHeight - placeable.height, 0) / 2
 
             layout(placeable.width, placeable.height) {
                 placeable.place(x, y, 100f)

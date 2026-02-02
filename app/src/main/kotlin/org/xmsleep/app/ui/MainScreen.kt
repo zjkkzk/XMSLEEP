@@ -148,6 +148,9 @@ fun MainScreen(
     // 用于强制收缩悬浮播放按钮的状态（当底部预设模块展开时）
     var forceCollapseFloatingButton by remember { mutableStateOf(false) }
     
+    // 设置页面内容隐藏状态（用于隐藏底部导航栏）
+    var isSettingsContentHidden by remember { mutableStateOf(false) }
+    
     // 自动更新检查（全局共享）
     val updateViewModel = remember { org.xmsleep.app.update.UpdateViewModel(context) }
     val updateState by updateViewModel.updateState.collectAsState()
@@ -594,7 +597,10 @@ fun MainScreen(
                                     navigator.navigateToQuoteHistory()
                                 },
                                 pinnedSounds = pinnedSounds,
-                                favoriteSounds = favoriteSounds
+                                favoriteSounds = favoriteSounds,
+                                onContentHiddenChange = { isHidden ->
+                                    isSettingsContentHidden = isHidden
+                                }
                             )
                         }
                         else -> { /* 不应该到达这里 */ }
@@ -691,9 +697,9 @@ fun MainScreen(
             }
             
             // 底部导航栏 - 作为独立层，应用毛玻璃效果
-            // 只在主页面显示
+            // 只在主页面显示，且设置页面内容未隐藏时显示
             androidx.compose.animation.AnimatedVisibility(
-                visible = isMainRoute,
+                visible = isMainRoute && !isSettingsContentHidden,
                 modifier = Modifier.align(Alignment.BottomCenter),
                 enter = androidx.compose.animation.fadeIn(
                     animationSpec = androidx.compose.animation.core.tween(
@@ -710,7 +716,7 @@ fun MainScreen(
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(horizontal = 24.dp)
-                        .padding(bottom = 46.dp)
+                        .padding(bottom = 32.dp)
                         .clip(MaterialTheme.shapes.extraLarge)
                         .hazeChild(
                             state = hazeState
