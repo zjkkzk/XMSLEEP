@@ -386,7 +386,7 @@ fun FavoriteScreen(
                 // 有收藏时显示卡片列表
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columnsCount),
-                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp), // 增加底部 padding 避开悬浮导航栏
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 140.dp), // 增加底部 padding 避开底部导航栏
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     state = scrollState,

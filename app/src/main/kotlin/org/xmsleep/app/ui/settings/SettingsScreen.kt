@@ -201,7 +201,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 8.dp) // 减少水平padding，与SettingsCategory一致
-                .padding(bottom = 100.dp), // 增加底部 padding 避开悬浮导航栏
+                .padding(bottom = 140.dp), // 增加底部 padding 避开底部导航栏
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
         // 外观设置

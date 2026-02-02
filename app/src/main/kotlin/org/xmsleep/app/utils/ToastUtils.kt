@@ -142,8 +142,10 @@ fun ToastContent(
  */
 object ToastUtils {
     fun showToast(context: Context, message: String, duration: Int = android.widget.Toast.LENGTH_SHORT) {
-        // 使用原生 Toast 作为后备方案（在非 Compose 环境使用）
-        android.widget.Toast.makeText(context, message, duration).show()
+        // 使用原生 Toast，设置为居中显示
+        val toast = android.widget.Toast.makeText(context, message, duration)
+        toast.setGravity(android.view.Gravity.CENTER, 0, 0) // 居中显示
+        toast.show()
     }
 }
 

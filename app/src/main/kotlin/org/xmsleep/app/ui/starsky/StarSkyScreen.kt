@@ -686,7 +686,7 @@ fun StarSkyScreen(
                     LazyColumn(
                         state = lazyListState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 100.dp), // 增加底部 padding 避开悬浮导航栏
+                        contentPadding = PaddingValues(bottom = 140.dp), // 增加底部 padding 避开底部导航栏
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                     sortedCategories.forEach { categoryId ->
@@ -880,7 +880,7 @@ fun StarSkyScreen(
                     LazyVerticalGrid(
                         state = lazyGridState,
                         columns = GridCells.Fixed(columnsCount),
-                        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 100.dp), // 增加底部 padding 避开悬浮导航栏
+                        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 140.dp), // 增加底部 padding 避开底部导航栏
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxSize()
