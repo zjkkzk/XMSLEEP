@@ -383,4 +383,71 @@
         <item>夜色溫柔，夢也溫柔</item>
         <item>放下疲憊，擁抱美夢</item>
     </string-array>
+    
+    <!-- 天氣智能推薦 -->
+    <string name="weather_smart_recommend">天氣智能推薦</string>
+    <string name="weather_smart_recommend_desc">根據天氣自動推薦白噪音</string>
+    <string name="weather_quote">給自己一個安靜的時刻</string>
+    <string name="weather_edit_title">天氣噪音映射</string>
+    <string name="weather_refresh">重新整理天氣</string>
+    <string name="weather_current">目前天氣：%1$s</string>
+    <string name="weather_select_type">選擇天氣類型</string>
+    <string name="weather_select_sound">選擇播放的白噪音</string>
+    <string name="weather_loading">正在獲取天氣…</string>
+    <string name="weather_manual_select">手動選擇天氣</string>
+    <string name="weather_location_failed">定位失敗，請手動選擇當前天氣：</string>
+    <string name="weather_sound_rain">雨聲</string>
+    <string name="weather_sound_light_rain">小雨</string>
+    <string name="weather_sound_heavy_rain">大雨</string>
+    <string name="weather_sound_thunder">雷聲</string>
+    <string name="weather_sound_wind">風聲</string>
+    <string name="weather_sound_birds">鳥叫</string>
+    <string name="weather_sound_river">河流</string>
+    <string name="weather_sound_forest">森林</string>
+    <string name="weather_sound_fireplace">篝火</string>
+    <string name="weather_sound_waves">海浪</string>
+    <string name="weather_sound_jungle">叢林</string>
+    <string name="weather_sound_drizzle">毛毛雨</string>
+    <string name="weather_sound_walk_in_snow">踩雪</string>
+    <string name="weather_sound_night">夜晚</string>
+    <string name="weather_sound_crickets">蟋蟀</string>
+    <string name="weather_sunny_clear">晴</string>
+    <string name="weather_sunny_night">晴晚</string>
+    <string name="weather_cloudy_partly">多雲</string>
+    <string name="weather_cloudy_overcast">陰</string>
+    <string name="weather_foggy">霧</string>
+    <string name="weather_foggy_drizzle">小霧</string>
+    <string name="weather_rain_light">小雨</string>
+    <string name="weather_rain_moderate">中雨</string>
+    <string name="weather_rain_heavy">大雨</string>
+    <string name="weather_rain_shower">陣雨</string>
+    <string name="weather_snow_light">小雪</string>
+    <string name="weather_snow_moderate">中雪</string>
+    <string name="weather_snow_heavy">大雪</string>
+    <string name="weather_snow_sleet">雨夾雪</string>
+    <string name="weather_clear">晴</string>
+    <string name="weather_partly_cloudy">晴間多雲</string>
+    <string name="weather_cloudy">多雲</string>
+    <string name="weather_overcast">陰</string>
+    <string name="weather_fog">霧</string>
+    <string name="weather_drizzle">小霧</string>
+    <string name="weather_freezing_fog">凍霧</string>
+    <string name="weather_rain">雨</string>
+    <string name="weather_freezing_rain">凍雨</string>
+    <string name="weather_snow">雪</string>
+    <string name="weather_snow_grains">雪粒</string>
+    <string name="weather_shower">陣雨</string>
+    <string name="weather_snow_shower">陣雪</string>
+    <string name="weather_thunderstorm">雷暴</string>
+    <string name="weather_thunderstorm_hail">雷暴伴冰雹</string>
+    <string name="wind_speed">風速</string>
+    <string name="humidity">濕度</string>
+    <string name="feels_like">體感</string>
+    <string name="downloading">正在下載</string>
+    <string name="tap_to_download_and_play">點擊下載並播放</string>
+    <string name="playing">正在播放</string>
+    <string name="play_recommended">播放推薦音樂</string>
+    <string name="download_and_play">下載並播放</string>
+    <string name="weather_location_required">需要定位權限獲取天氣</string>
+    <string name="weather_unknown">未知</string>
 </resources>

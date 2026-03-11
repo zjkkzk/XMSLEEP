@@ -71,6 +71,7 @@ fun MainScreen(
     soundCardsColumnsCount: Int,
     currentLanguage: LanguageManager.Language,
     audioPermissionLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Boolean>,
+    locationPermissionLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Boolean>,
     onAudioPermissionGranted: () -> Unit,
     onLanguageChange: (LanguageManager.Language) -> Unit,
     onDarkModeChange: (DarkModeOption) -> Unit,
@@ -598,6 +599,7 @@ fun MainScreen(
                                 },
                                 pinnedSounds = pinnedSounds,
                                 favoriteSounds = favoriteSounds,
+                                locationPermissionLauncher = locationPermissionLauncher,
                                 onContentHiddenChange = { isHidden ->
                                     isSettingsContentHidden = isHidden
                                 }

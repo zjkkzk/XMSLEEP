@@ -138,10 +138,9 @@ class UpdateChecker(
             android.util.Log.e("UpdateChecker", "IOException: ${e.message}", e)
             throw e
         } catch (e: Exception) {
-            android.util.Log.e("UpdateChecker", "Exception: ${e.message}", e)
-            e.printStackTrace()
-            // 其他异常也转换为IOException
-            throw IOException("检查更新失败: ${e.message}", e)
+            android.util.Log.e("UpdateChecker", "检查更新失败", e)
+            // 其他异常也转换为 IOException
+            throw IOException("检查更新失败：${e.message}", e)
         }
     }
     

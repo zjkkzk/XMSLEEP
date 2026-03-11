@@ -3,6 +3,7 @@ package org.xmsleep.app.ui.settings
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.Manifest
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -45,6 +46,7 @@ import org.xmsleep.app.ui.components.SwitchItem
 import org.xmsleep.app.ui.BackgroundSelection
 import org.xmsleep.app.preferences.PreferencesManager
 import org.xmsleep.app.update.UpdateDialog
+import org.xmsleep.app.ui.starsky.WeatherEditDialog
 import org.xmsleep.app.utils.*
 
 /**
@@ -66,8 +68,9 @@ fun SettingsScreen(
     onNavigateToQuoteHistory: () -> Unit = {},
     pinnedSounds: MutableState<MutableSet<AudioManager.Sound>>,
     favoriteSounds: MutableState<MutableSet<AudioManager.Sound>>,
+    locationPermissionLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Boolean>,
     onScrollDetected: () -> Unit = {},
-    onContentHiddenChange: (Boolean) -> Unit = {} // 新增：内容隐藏状态回调
+    onContentHiddenChange: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -86,6 +89,33 @@ fun SettingsScreen(
     var autoCountdownMinutes by remember { 
         mutableIntStateOf(org.xmsleep.app.preferences.PreferencesManager.getAutoCountdownMinutes(context))
     }
+    
+    // 天气智能推荐状态
+    var weatherEnabled by remember { mutableStateOf(org.xmsleep.app.weather.WeatherSoundMapper.isEnabled(context)) }
+    var hasLocationPermission by remember { 
+        mutableStateOf(
+            androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    var showWeatherEditDialog by remember { mutableStateOf(false) }
+    var currentWeatherCodeForDialog by remember { mutableIntStateOf(0) }
+    
+    // 天气开关处理
+    val onWeatherToggle: (Boolean) -> Unit = { enabled ->
+        weatherEnabled = enabled
+        org.xmsleep.app.weather.WeatherSoundMapper.setEnabled(context, enabled)
+        if (enabled && !hasLocationPermission) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+    }
+    
+    // 定期检查权限状态
+    LaunchedEffect(Unit) {
+        hasLocationPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
     val updateState by updateViewModel.updateState.collectAsState()
     // 获取当前版本号
     val currentVersion = remember {
@@ -351,6 +381,24 @@ fun SettingsScreen(
                     onClick = { showLanguageDialog = true }
                 ),
                 SettingsCategoryItem(
+                    icon = Icons.Default.Cloud,
+                    title = { Text(context.getString(R.string.weather_smart_recommend)) },
+                    description = {
+                        Text(
+                            context.getString(R.string.weather_smart_recommend_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = weatherEnabled,
+                            onCheckedChange = onWeatherToggle
+                        )
+                    },
+                    onClick = { onWeatherToggle(!weatherEnabled) }
+                ),
+                SettingsCategoryItem(
                     icon = Icons.AutoMirrored.Filled.VolumeUp,
                     title = { Text(context.getString(R.string.adjust_all_volume)) },
                     description = {
@@ -506,46 +554,81 @@ fun SettingsScreen(
         }
     }
         
-        // 悬浮灯泡按钮层（始终在最上层）
+        // 悬浮按钮层（始终在最上层）
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 16.dp, end = 16.dp)
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally // 改为居中对齐
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.Top
             ) {
-                // 灯泡按钮（添加圆角矩形背景）
-                Surface(
-                    onClick = { showPullRing = !showPullRing },
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
+                // 天气设置按钮（仅在天气功能开启时显示）
+                if (weatherEnabled) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.light_24px),
-                            contentDescription = if (isContentHidden) "显示内容" else "隐藏内容",
-                            tint = if (isContentHidden) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Surface(
+                            onClick = {
+                                val lastWeather = org.xmsleep.app.weather.WeatherSoundMapper.getLastWeather(context)
+                                currentWeatherCodeForDialog = lastWeather?.weatherCode ?: 0
+                                showWeatherEditDialog = true
+                            },
+                            modifier = Modifier.size(40.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Cloud,
+                                    contentDescription = "天气设置",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
                     }
                 }
                 
-                // 拉环控制（从灯泡下方掉落，居中对齐）
-                if (showPullRing) {
-                    org.xmsleep.app.ui.components.PullRingControl(
-                        isContentHidden = isContentHidden,
-                        onToggle = {
-                            isContentHidden = !isContentHidden
-                            // 切换后自动收起拉环
-                            showPullRing = false
-                        },
-                        animationProgress = pullRingProgress
-                    )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // 灯泡按钮（添加圆角矩形背景）
+                    Surface(
+                        onClick = { showPullRing = !showPullRing },
+                        modifier = Modifier.size(40.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.light_24px),
+                                contentDescription = if (isContentHidden) "显示内容" else "隐藏内容",
+                                tint = if (isContentHidden) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    
+                    // 拉环控制（从灯泡下方掉落，居中对齐）
+                    if (showPullRing) {
+                        org.xmsleep.app.ui.components.PullRingControl(
+                            isContentHidden = isContentHidden,
+                            onToggle = {
+                                isContentHidden = !isContentHidden
+                                // 切换后自动收起拉环
+                                showPullRing = false
+                            },
+                            animationProgress = pullRingProgress
+                        )
+                    }
                 }
             }
         }
@@ -870,6 +953,20 @@ fun SettingsScreen(
                     TextButton(onClick = { showAutoCountdownDialog = false }) {
                         Text(context.getString(R.string.cancel))
                     }
+                }
+            )
+        }
+        
+        // 天气编辑对话框
+        if (showWeatherEditDialog) {
+            val lastWeather = org.xmsleep.app.weather.WeatherSoundMapper.getLastWeather(context)
+            val weatherCode = lastWeather?.weatherCode ?: currentWeatherCodeForDialog
+            WeatherEditDialog(
+                context = context,
+                weatherCode = if (weatherCode != 0) weatherCode else 0,
+                onDismiss = { showWeatherEditDialog = false },
+                onRefreshWeather = {
+                    // 刷新天气功能在设置页面不需要实现
                 }
             )
         }

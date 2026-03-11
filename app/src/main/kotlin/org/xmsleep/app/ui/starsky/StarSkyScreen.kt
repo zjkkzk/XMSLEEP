@@ -38,6 +38,7 @@ import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.xmsleep.app.R
 import org.xmsleep.app.ui.components.pagerTabIndicatorOffset
 
@@ -48,7 +49,7 @@ import org.xmsleep.app.ui.components.pagerTabIndicatorOffset
 @Composable
 fun StarSkyScreen(
     modifier: Modifier = Modifier,
-    activePreset: Int = 1, // 当前激活的预设
+    activePreset: Int = 1,
     onScrollDetected: () -> Unit = {},
     onNavigateToLocalAudio: () -> Unit = {}
 ) {
@@ -577,6 +578,7 @@ fun StarSkyScreen(
                 }
             }
         }
+        
         // 音频列表
         else if (remoteSounds.isNotEmpty()) {
             SwipeRefresh(

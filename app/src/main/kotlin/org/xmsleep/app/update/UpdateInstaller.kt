@@ -37,7 +37,7 @@ class UpdateInstaller(private val context: Context) {
                 }
                 context.startActivity(intent)
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("UpdateInstaller", "请求安装权限失败", e)
             }
         }
     }
@@ -79,7 +79,7 @@ class UpdateInstaller(private val context: Context) {
             context.startActivity(intent)
             true
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("UpdateInstaller", "安装 APK 失败", e)
             false
         }
     }

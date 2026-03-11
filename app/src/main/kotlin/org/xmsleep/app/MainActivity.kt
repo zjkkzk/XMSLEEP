@@ -145,6 +145,15 @@ fun XMSLEEPApp() {
         }
     }
     
+    // 位置权限请求 launcher（用于天气功能）
+    var onLocationPermissionResult: ((Boolean) -> Unit)? = null
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        Logger.d("MainActivity", "位置权限请求结果: $isGranted")
+        onLocationPermissionResult?.invoke(isGranted)
+    }
+    
     // 调色板颜色列表（硬编码的柔和粉彩色，12色）
     val paletteColors = remember {
         listOf(
@@ -264,6 +273,7 @@ fun XMSLEEPApp() {
                     soundCardsColumnsCount = soundCardsColumnsCount,
                     currentLanguage = currentLanguage,
                     audioPermissionLauncher = audioPermissionLauncher,
+                    locationPermissionLauncher = locationPermissionLauncher,
                     onAudioPermissionGranted = { shouldNavigateToLocalAudio = true },
                     onLanguageChange = { currentLanguage = it },
                     onDarkModeChange = { newMode ->

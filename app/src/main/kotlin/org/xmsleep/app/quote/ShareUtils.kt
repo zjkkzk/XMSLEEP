@@ -67,7 +67,7 @@ object ShareUtils {
                     })
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("ShareUtils", "分享图片失败", e)
                 throw e
             }
         }
@@ -140,8 +140,7 @@ object ShareUtils {
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ShareUtils", "保存图片异常: ${e.javaClass.simpleName}: ${e.message}", e)
-                e.printStackTrace()
+                android.util.Log.e("ShareUtils", "保存图片异常", e)
                 Result.failure(e)
             }
         }

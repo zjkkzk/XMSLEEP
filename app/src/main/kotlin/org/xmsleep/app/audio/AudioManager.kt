@@ -22,6 +22,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.common.MediaItem
 import org.xmsleep.app.R
 import org.xmsleep.app.service.MusicService
+import org.xmsleep.app.utils.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -76,25 +77,25 @@ class AudioManager private constructor() {
     private val remotePlayingStates = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
     
     // 网络音频的音量设置
-    private val remoteVolumeSettings = mutableMapOf<String, Float>()
+    private val remoteVolumeSettings = java.util.concurrent.ConcurrentHashMap<String, Float>()
     
     // 记录哪些远程音频的音量已经从 SharedPreferences 加载过
-    private val remoteVolumeLoaded = mutableSetOf<String>()
+    private val remoteVolumeLoaded = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<String, Boolean>())
     
     // 网络音频的元数据（用于恢复播放）
     private val remoteMetadataCache = java.util.concurrent.ConcurrentHashMap<String, Pair<org.xmsleep.app.audio.model.SoundMetadata, android.net.Uri>>()
     
     // 网络音频的循环信息（用于无缝循环）
-    private val remoteLoopInfo = mutableMapOf<String, Pair<Long, Long>>() // soundId -> (loopStart, loopEnd) in milliseconds
+    private val remoteLoopInfo = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Long>>() // soundId -> (loopStart, loopEnd) in milliseconds
     
     // 网络音频的位置检查 Runnable（用于无缝循环）
-    private val remotePositionCheckRunnables = mutableMapOf<String, Runnable>()
+    private val remotePositionCheckRunnables = java.util.concurrent.ConcurrentHashMap<String, Runnable>()
     
     // 本地音频的循环信息（用于无缝循环）
-    private val localLoopInfo = mutableMapOf<Sound, Pair<Long, Long>>() // sound -> (loopStart, loopEnd) in milliseconds
+    private val localLoopInfo = java.util.concurrent.ConcurrentHashMap<Sound, Pair<Long, Long>>() // sound -> (loopStart, loopEnd) in milliseconds
     
     // 本地音频的位置检查 Runnable（用于无缝循环）
-    private val localPositionCheckRunnables = mutableMapOf<Sound, Runnable>()
+    private val localPositionCheckRunnables = java.util.concurrent.ConcurrentHashMap<Sound, Runnable>()
     
     // 播放顺序队列，用于限制最多同时播放的声音数量
     private sealed class PlayingItem {
@@ -199,8 +200,7 @@ class AudioManager private constructor() {
                 hasAudioFocus
             }
         } catch (e: Exception) {
-            Log.e(TAG, "请求音频焦点失败: ${e.message}")
-            e.printStackTrace()
+            Logger.e(TAG, "请求音频焦点失败", e)
             false
         }
     }
@@ -403,8 +403,7 @@ class AudioManager private constructor() {
             
             Log.d(TAG, "$soundName 音频媒体源已设置，循环范围: ${startPositionMs}ms - ${if (endPositionMs > 0) "${endPositionMs}ms" else "音源末尾"}，使用无缝循环: $useSeamlessLoop")
         } catch (e: Exception) {
-            Log.e(TAG, "准备$soundName 音频失败: ${e.message}")
-            e.printStackTrace()
+            Logger.e(TAG, "准备$soundName 音频失败", e)
         }
     }
 
@@ -471,14 +470,15 @@ class AudioManager private constructor() {
                     player.stop()
                 }
                 player.playWhenReady = false
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Logger.w(TAG, "停止播放器时出错", e)
+            }
 
             player.setMediaSource(clipped)
             // 直接使用 REPEAT_MODE_ONE，让 ExoPlayer 自动循环
             player.repeatMode = Player.REPEAT_MODE_ONE
         } catch (e: Exception) {
-            Log.e(TAG, "准备大雨音频(AB拼接)失败: ${e.message}")
-            e.printStackTrace()
+            Logger.e(TAG, "准备大雨音频 (AB 拼接) 失败", e)
         }
     }
 
@@ -701,8 +701,7 @@ class AudioManager private constructor() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "准备 ${sound.name} 音频源失败: ${e.message}")
-                e.printStackTrace()
+                Logger.e(TAG, "准备 ${sound.name} 音频源失败", e)
                 return
             }
 
@@ -749,16 +748,12 @@ class AudioManager private constructor() {
                 
                 Log.d(TAG, "${sound.name} 开始播放，媒体源数量: ${player.mediaItemCount}，播放器状态: ${player.playbackState}，playWhenReady: ${player.playWhenReady}")
             } catch (e: Exception) {
-                Log.e(TAG, "播放 ${sound.name} 时出错: ${e.message}", e)
+                Logger.e(TAG, "播放 ${sound.name} 时出错", e)
                 playingStates[sound] = false
-                // 打印完整的堆栈跟踪
-                Log.e(TAG, "错误堆栈:", e)
-                e.printStackTrace()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "播放 ${sound.name} 声音失败: ${e.message}")
+            Logger.e(TAG, "播放 ${sound.name} 声音失败", e)
             playingStates[sound] = false
-            e.printStackTrace()
         }
     }
 
@@ -1164,8 +1159,7 @@ class AudioManager private constructor() {
             
             Log.d(TAG, "========== 保存最近播放记录完成 ==========")
         } catch (e: Exception) {
-            Log.e(TAG, "保存最近播放声音失败: ${e.message}")
-            e.printStackTrace()
+            Logger.e(TAG, "保存最近播放声音失败", e)
         }
     }
     
@@ -1486,8 +1480,7 @@ class AudioManager private constructor() {
                     remotePlayingStates[soundId] = false
                     Log.d(TAG, "$soundId 播放器初始化成功")
                 } catch (e: Exception) {
-                    Log.e(TAG, "初始化 $soundId 播放器失败: ${e.message}")
-                    e.printStackTrace()
+                    Logger.e(TAG, "初始化 $soundId 播放器失败", e)
                     return
                 }
             }
@@ -1584,14 +1577,12 @@ class AudioManager private constructor() {
                 
                 Log.d(TAG, "$soundId 开始播放，循环范围: ${metadata.loopStart}ms - ${metadata.loopEnd}ms")
             } catch (e: Exception) {
-                Log.e(TAG, "播放 $soundId 声音失败: ${e.message}")
+                Logger.e(TAG, "播放 $soundId 声音失败", e)
                 remotePlayingStates[soundId] = false
-                e.printStackTrace()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "播放网络音频失败: ${e.message}")
+            Logger.e(TAG, "播放网络音频失败", e)
             remotePlayingStates[metadata.id] = false
-            e.printStackTrace()
         }
     }
     

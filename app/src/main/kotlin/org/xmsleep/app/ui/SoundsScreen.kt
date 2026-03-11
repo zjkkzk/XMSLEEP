@@ -151,6 +151,9 @@ import com.materialkolor.hct.Hct
 import com.materialkolor.ktx.toHct
 import com.airbnb.lottie.value.LottieFrameInfo
 import org.xmsleep.app.utils.ToastUtils
+import org.xmsleep.app.weather.WeatherData
+import org.xmsleep.app.weather.WeatherService
+import org.xmsleep.app.weather.WeatherSoundMapper
 
 /**
  * 自定义颜色回调，根据原颜色的亮度和饱和度动态映射到主题色系或灰色系
@@ -366,6 +369,65 @@ fun SoundsScreen(
             remoteSounds = sounds
         } catch (e: Exception) {
             android.util.Log.e("SoundsScreen", "加载远程音频失败: ${e.message}")
+        }
+    }
+    
+    // 天气智能推荐状态
+    var weatherEnabled by remember { mutableStateOf(WeatherSoundMapper.isEnabled(context)) }
+    var currentWeather by remember { mutableStateOf<WeatherData?>(null) }
+    
+    // 定期检查天气开关状态（用户可能在设置页面更改）
+    LaunchedEffect(Unit) {
+        while (true) {
+            val enabled = WeatherSoundMapper.isEnabled(context)
+            if (enabled != weatherEnabled) {
+                weatherEnabled = enabled
+            }
+            delay(1000)
+        }
+    }
+    
+    // 天气数据获取
+    LaunchedEffect(weatherEnabled) {
+        if (!weatherEnabled) {
+            currentWeather = null
+            return@LaunchedEffect
+        }
+        
+        // 先尝试加载上次缓存的天气
+        val lastWeather = WeatherSoundMapper.getLastWeather(context)
+        if (lastWeather != null) {
+            currentWeather = lastWeather
+        }
+        
+        // 检查位置权限
+        val hasLocationPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        
+        if (!hasLocationPermission) return@LaunchedEffect
+        
+        // 获取位置并刷新天气
+        try {
+            val locationManager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
+            val location = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                ?: locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+            
+            if (location != null) {
+                val weatherService = WeatherService()
+                val result = weatherService.getWeather(location.latitude, location.longitude)
+                result.onSuccess { data ->
+                    currentWeather = data
+                    WeatherSoundMapper.saveLastWeather(
+                        context, data.weatherCode,
+                        location.latitude, location.longitude,
+                        data.temperature, data.cityName,
+                        data.humidity, data.feelsLike
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SoundsScreen", "获取天气失败: ${e.message}")
         }
     }
     
@@ -664,7 +726,8 @@ fun SoundsScreen(
                 }
             )
     ) {
-        // 顶部标题、深色模式切换按钮和收藏按钮
+        // 顶部标题、深色模式切换按钮和收藏按钮（天气模式下隐藏）
+        if (!weatherEnabled) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -737,6 +800,7 @@ fun SoundsScreen(
                 }
             }
         }
+        }
         
         // 快捷播放展开/收缩状态（提前定义，以便在Column中使用）
         // 应用启动时始终收起，不管之前的状态
@@ -773,6 +837,23 @@ fun SoundsScreen(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
+                // 天气智能推荐卡片（天气模式下居中显示）
+                if (weatherEnabled) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        WeatherCard(
+                            currentWeather = currentWeather,
+                            remoteSounds = remoteSounds,
+                            context = context,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+                
+                // 标题和布局切换按钮 + 内置声音内容（天气模式下隐藏）
+                if (!weatherEnabled) {
                 // 标题和布局切换按钮（独立一行）
                 Row(
                     modifier = Modifier
@@ -878,6 +959,7 @@ fun SoundsScreen(
                     favoriteSounds.value = currentSet
                 }
             )
+        } // end if (!weatherEnabled || currentWeather == null) - 内置声音模块
         }
         
         // 快捷播放是否有声音（包括本地和远程）
