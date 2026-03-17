@@ -319,26 +319,26 @@
     
     <!-- 治愈句子 - 中午 -->
     <string-array name="healing_quotes_afternoon">
-        <item>午後時光，靜享安寧</item>
-        <item>中午了，你是不是該午休啦</item>
+        <item>這是一個花花的世界</item>
+        <item>做一個安靜的人</item>
         <item>慢下來，感受生活的美好</item>
-        <item>這一刻你在想什麼</item>
+        <item>中午了，你是不是該午休啦</item>
         <item>給自己一個放鬆的時刻</item>
         <item>下午茶時間，享受悠閒</item>
         <item>多喝熱水，動起來</item>
-        <item>好春光，不如夢一場</item>
+        <item>這一刻你在想什麼</item>
         <item>慢生活，才是真生活</item>
         <item>今天有好好吃飯嗎</item>
         <item>給忙碌的自己一個擁抱</item>
         <item>下午好，記得休息一下</item>
-        <item>午後時光，溫柔而美好</item>
-        <item>是不是忘記摸魚了</item>
+        <item>拒絕996</item>
+        <item>好春光，不如夢一場</item>
         <item>慢慢來，一切都來得及</item>
         <item>真誠的明辨是非</item>
         <item>給心靈放個假</item>
-        <item>我想帶你去我的外婆家，一起看看日落</item>
+        <item>是不是忘記摸魚了</item>
         <item>眼播間操做了嗎</item>
-        <item>微風正好，不負好時光</item>
+        <item>我想帶你去我的外婆家，一起看看日落</item>
         <item>慢下腳步，感受當下</item>
         <item>最近一次買花是什麼時候了</item>
         <item>給自己一點時間放空</item>
@@ -346,20 +346,20 @@
         <item>告訴你個秘密，其實我的鞋子沒有增高墊</item>
         <item>你是不是在雪山上救過一隻狐狸</item>
         <item>脖子酸了嗎，左三圈右三圈來一遍</item>
-        <item>午後時光，美好而寧靜</item>
+        <item>在門口種一株向日葵吧</item>
         <item>哈哈哈哈哈哈哈</item>
         <item>給疲憊的心靈一個休息</item>
     </string-array>
     
     <!-- 治愈句子 - 晚上 -->
     <string-array name="healing_quotes_evening">
-        <item>晚安，願你好夢</item>
+        <item>現在幾點了</item>
         <item>夜深了，該休息了</item>
         <item>星光不問趕路人，歲月不負有心人</item>
-        <item>晚風輕拂，帶走一天的疲憊</item>
-        <item>夜晚的寧靜，讓心靈沉澱</item>
+        <item>辛苦一天了，蓋好被子，睡個好覺。</item>
+        <item>今天開心嗎？不管怎樣，今晚好好休息。</item>
         <item>願你今夜安眠，明日醒來元氣滿滿</item>
-        <item>月光如水，溫柔了整個夜晚</item>
+        <item>今日宜注意飲食，忌油膩</item>
         <item>晚安，做個好夢</item>
         <item>夜色溫柔，你也是</item>
         <item>放下一天的煩惱，好好休息</item>
@@ -369,19 +369,19 @@
         <item>晚風習習，帶來好心情</item>
         <item>夜晚的靜謐，治癒一切</item>
         <item>願你今夜無夢，一覺到天明</item>
-        <item>月色朦朧，歲月靜好</item>
+        <item>今天有沒有好好發呆</item>
         <item>晚安，明天又是美好的一天</item>
-        <item>夜色如墨，溫柔如你</item>
+        <item>不要急，多來幾次深呼吸吧</item>
         <item>放鬆身心，享受夜晚的寧靜</item>
         <item>晚安，願你睡個好覺</item>
         <item>夜深了，讓心靈休息</item>
-        <item>星光璀璨，照亮前行的路</item>
-        <item>晚風輕拂，帶來好夢</item>
+        <item>今夜你那裡有星星出現嗎</item>
+        <item>晚風來了嗎</item>
         <item>夜晚的溫柔，屬於你</item>
         <item>願你今夜好眠，明日更好</item>
-        <item>月光皎潔，心情舒暢</item>
+        <item>偷偷告訴你個秘密～密～密～～～</item>
         <item>晚安，做最真實的自己</item>
-        <item>夜色溫柔，夢也溫柔</item>
+        <item>好好吃飯，好好睡覺</item>
         <item>放下疲憊，擁抱美夢</item>
     </string-array>
     

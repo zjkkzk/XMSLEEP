@@ -321,7 +321,7 @@ If you have any questions, please contact us through the in-app contact method.<
     
     <!-- Healing Quotes - Afternoon -->
     <string-array name="healing_quotes_afternoon">
-        <item>Afternoon time, enjoy the peace</item>
+        <item>This is a world of flowers</item>
         <item>Be a quiet person</item>
         <item>Slow down, feel life\'s beauty</item>
         <item>It\'s noon, time for a nap?</item>
@@ -333,7 +333,7 @@ If you have any questions, please contact us through the in-app contact method.<
         <item>Did you eat well today?</item>
         <item>Give yourself a hug</item>
         <item>Good afternoon, remember to rest</item>
-        <item>Afternoon time, gentle and beautiful</item>
+        <item>Say no to 996</item>
         <item>What a wonderful spring, better than a dream</item>
         <item>Take it slow, everything will come</item>
         <item>Think sincerely, discern right from wrong</item>
@@ -348,42 +348,42 @@ If you have any questions, please contact us through the in-app contact method.<
         <item>Let me tell you a secret, my shoes don\'t have lift pads</item>
         <item>Did you save a fox on a snowy mountain?</item>
         <item>Neck sore? Do some neck circles</item>
-        <item>Afternoon time, beautiful and serene</item>
+        <item>Plant a sunflower at your door</item>
         <item>Hahahahahahaha</item>
         <item>Give your tired soul a rest</item>
     </string-array>
     
     <!-- Healing Quotes - Evening -->
     <string-array name="healing_quotes_evening">
-        <item>Good night, sweet dreams</item>
+        <item>What time is it now?</item>
         <item>It\'s late, time to rest</item>
         <item>Stars don\'t ask travelers, time rewards the devoted</item>
-        <item>Evening breeze takes away the day\'s fatigue</item>
-        <item>Night\'s serenity lets the soul settle</item>
+        <item>Hard work all day, tuck yourself in and sleep well</item>
+        <item>Are you happy today? Rest well tonight either way</item>
         <item>Sleep well tonight, wake up energized tomorrow</item>
-        <item>Moonlight like water, gentle all night</item>
+        <item>Today watch your diet, avoid greasy food</item>
         <item>Good night, have sweet dreams</item>
         <item>Night is gentle, so are you</item>
-        <item>Let go of worries, rest well</item>
+        <item>Let go of today\'s worries, rest well</item>
         <item>Good night, may the world treat you gently</item>
         <item>Deep night, perfect for emptying your mind</item>
         <item>Stars light up, illuminate your dreams</item>
         <item>Evening breeze brings good mood</item>
         <item>Night\'s tranquility heals everything</item>
         <item>May you sleep dreamlessly till dawn</item>
-        <item>Moonlight hazy, time peaceful</item>
+        <item>Did you daydream well today?</item>
         <item>Good night, tomorrow is another beautiful day</item>
-        <item>Night like ink, gentle like you</item>
+        <item>Don\'t worry, take a few deep breaths</item>
         <item>Relax, enjoy the night\'s serenity</item>
         <item>Good night, sleep well</item>
         <item>It\'s late, let your soul rest</item>
-        <item>Starlight brilliant, lights the way forward</item>
-        <item>Evening breeze brings sweet dreams</item>
+        <item>Are there stars out tonight where you are?</item>
+        <item>Has the evening breeze arrived?</item>
         <item>Night\'s gentleness belongs to you</item>
         <item>Sleep well tonight, better tomorrow</item>
-        <item>Moonlight bright, mood cheerful</item>
+        <item>Let me tell you a secret... ssshhh...</item>
         <item>Good night, be your true self</item>
-        <item>Night gentle, dreams gentle too</item>
+        <item>Eat well, sleep well</item>
         <item>Let go of fatigue, embrace sweet dreams</item>
     </string-array>
     

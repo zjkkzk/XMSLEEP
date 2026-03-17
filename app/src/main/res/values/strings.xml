@@ -339,10 +339,10 @@
     
     <!-- 治愈句子 - 中午 -->
     <string-array name="healing_quotes_afternoon">
-        <item>午后时光，静享安宁</item>
+        <item>这是一个花花的世界</item>
         <item>做一个安静的人</item>
         <item>慢下来，感受生活的美好</item>
-        <item>中午了，你是不是该午休啦</item>
+        <item>中午了你是不是该午休啦</item>
         <item>给自己一个放松的时刻</item>
         <item>下午茶时间，享受悠闲</item>
         <item>多喝热水，动起来</item>
@@ -351,7 +351,7 @@
         <item>今天有好好吃饭吗</item>
         <item>给忙碌的自己一个拥抱</item>
         <item>下午好，记得休息一下</item>
-        <item>午后时光，温柔而美好</item>
+        <item>拒绝996</item>
         <item>好春光，不如梦一场</item>
         <item>慢慢来，一切都来得及</item>
         <item>真诚的明辨是非</item>
@@ -366,20 +366,20 @@
         <item>告诉你个秘密，其实我的鞋子没有增高垫</item>
         <item>你是不是在雪山上救过一只狐狸</item>
         <item>脖子酸了吗，左三圈右三圈来一遍</item>
-        <item>午后时光，美好而宁静</item>
+        <item>在门口种一株向日葵吧</item>
         <item>哈哈哈哈哈哈哈</item>
         <item>给疲惫的心灵一个休息</item>
     </string-array>
     
     <!-- 治愈句子 - 晚上 -->
     <string-array name="healing_quotes_evening">
-        <item>晚安，愿你好梦</item>
+        <item>现在几点了</item>
         <item>夜深了，该休息了</item>
         <item>星光不问赶路人，岁月不负有心人</item>
-        <item>晚风轻拂，带走一天的疲惫</item>
-        <item>夜晚的宁静，让心灵沉淀</item>
+        <item>辛苦一天了，盖好被子，睡个好觉。</item>
+        <item>今天开心吗？不管怎样，今晚好好休息。</item>
         <item>愿你今夜安眠，明日醒来元气满满</item>
-        <item>月光如水，温柔了整个夜晚</item>
+        <item>今日宜注意饮食，忌油腻</item>
         <item>晚安，做个好梦</item>
         <item>夜色温柔，你也是</item>
         <item>放下一天的烦恼，好好休息</item>
@@ -389,19 +389,19 @@
         <item>晚风习习，带来好心情</item>
         <item>夜晚的静谧，治愈一切</item>
         <item>愿你今夜无梦，一觉到天明</item>
-        <item>月色朦胧，岁月静好</item>
+        <item>今天有没有好好发呆</item>
         <item>晚安，明天又是美好的一天</item>
-        <item>夜色如墨，温柔如你</item>
+        <item>不要急，多来几次深呼吸吧</item>
         <item>放松身心，享受夜晚的宁静</item>
         <item>晚安，愿你睡个好觉</item>
         <item>夜深了，让心灵休息</item>
-        <item>星光璀璨，照亮前行的路</item>
-        <item>晚风轻拂，带来好梦</item>
+        <item>今夜你那里有星星出现吗</item>
+        <item>晚风来了吗</item>
         <item>夜晚的温柔，属于你</item>
         <item>愿你今夜好眠，明日更好</item>
-        <item>月光皎洁，心情舒畅</item>
+        <item>偷偷告诉你个秘密～密～密～～～</item>
         <item>晚安，做最真实的自己</item>
-        <item>夜色温柔，梦也温柔</item>
+        <item>好好吃饭，好好睡觉</item>
         <item>放下疲惫，拥抱美梦</item>
     </string-array>
     
