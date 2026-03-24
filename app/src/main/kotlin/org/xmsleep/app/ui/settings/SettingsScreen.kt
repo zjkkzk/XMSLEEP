@@ -48,6 +48,7 @@ import org.xmsleep.app.ui.BackgroundSelection
 import org.xmsleep.app.preferences.PreferencesManager
 import org.xmsleep.app.update.UpdateDialog
 import org.xmsleep.app.ui.starsky.WeatherEditDialog
+import org.xmsleep.app.ui.components.PullRingControl
 import org.xmsleep.app.utils.Logger
 import org.xmsleep.app.utils.*
 
@@ -666,8 +667,23 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
         }
-    }
+        
+        // 番茄计时器（当内容隐藏时显示）
+        if (isContentHidden) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                TomatoTimerView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.78f)
+                        .padding(bottom = 60.dp)
+                )
+            }
+        }
         
         // 软件更新对话框
         if (showUpdateDialog) {

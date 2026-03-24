@@ -522,4 +522,12 @@
     <string name="tab_starsky">繁星</string>
     <string name="tab_breathing">呼吸</string>
     <string name="tab_settings">设置</string>
+    
+    <!-- 番茄计时器 -->
+    <string name="tomato_today_completed">今日完成：%1$d 个番茄</string>
+    <string name="tomato_focus">专注</string>
+    <string name="tomato_break">休息</string>
+    <string name="tomato_start">开始</string>
+    <string name="tomato_pause">暂停</string>
+    <string name="tomato_reset">重置</string>
 </resources>
