@@ -504,4 +504,15 @@ If you have any questions, please contact us through the in-app contact method.<
     <!-- Flip Clock -->
     <string name="flip_clock">Big Clock</string>
     <string name="flip_clock_description">This feature requires sufficient battery</string>
+    <string name="flip_clock_back">Back</string>
+    <string name="flip_clock_countdown">Countdown</string>
+    <string name="flip_clock_cancel_countdown">Cancel countdown</string>
+    <string name="flip_clock_font">Font</string>
+    <string name="flip_clock_set_countdown">Set Countdown</string>
+    <string name="flip_clock_minutes_format">%1$d min</string>
+    <string name="flip_clock_start">Start</string>
+    <string name="flip_clock_cancel">Cancel</string>
+    <string name="flip_clock_select_font">Select Font</string>
+    <string name="flip_clock_font_bebas_neue_desc">Airport flight display style, extra bold</string>
+    <string name="flip_clock_font_oswald_desc">Industrial vintage style</string>
 </resources>

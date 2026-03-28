@@ -12,21 +12,21 @@ import org.xmsleep.app.R
 enum class ClockFont(
     val displayName: String,
     val fontFamily: FontFamily,
-    val description: String,
+    val descriptionResId: Int,
     val verticalOffset: Int = 0, // 垂直偏移量（dp）
     val fontSize: Int = 240 // 主数字字号（sp）
 ) {
     BEBAS_NEUE(
         displayName = "Bebas Neue",
         fontFamily = FontFamily(Font(R.font.bebas_neue, FontWeight.Normal)),
-        description = "机场航班显示屏风格，极粗",
+        descriptionResId = R.string.flip_clock_font_bebas_neue_desc,
         verticalOffset = 12, // 向下偏移12dp
         fontSize = 260 // 字号放大40sp
     ),
     OSWALD(
         displayName = "Oswald",
         fontFamily = FontFamily(Font(R.font.oswald_bold, FontWeight.Bold)),
-        description = "工业复古风",
+        descriptionResId = R.string.flip_clock_font_oswald_desc,
         verticalOffset = -6, // 向上偏移6dp
         fontSize = 230 // 字号稍小
     );

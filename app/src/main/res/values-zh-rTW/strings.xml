@@ -220,6 +220,17 @@
     <!-- Flip Clock -->
     <string name="flip_clock">大時鐘</string>
     <string name="flip_clock_description">此功能需要保持電量充足</string>
+    <string name="flip_clock_back">返回</string>
+    <string name="flip_clock_countdown">倒計時</string>
+    <string name="flip_clock_cancel_countdown">取消倒計時</string>
+    <string name="flip_clock_font">字體</string>
+    <string name="flip_clock_set_countdown">設置倒計時</string>
+    <string name="flip_clock_minutes_format">%1$d分</string>
+    <string name="flip_clock_start">開始</string>
+    <string name="flip_clock_cancel">取消</string>
+    <string name="flip_clock_select_font">選擇字體</string>
+    <string name="flip_clock_font_bebas_neue_desc">機場航班顯示屏風格，極粗</string>
+    <string name="flip_clock_font_oswald_desc">工業復古風</string>
 
     <!-- 預設模組 -->
     <string name="preset_1">預設 1</string>

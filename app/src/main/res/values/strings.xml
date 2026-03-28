@@ -212,6 +212,17 @@
     <string name="countdown_2_hours">2小时</string>
     <string name="flip_clock">大时钟</string>
     <string name="flip_clock_description">此功能需要保持电量充足</string>
+    <string name="flip_clock_back">返回</string>
+    <string name="flip_clock_countdown">倒计时</string>
+    <string name="flip_clock_cancel_countdown">取消倒计时</string>
+    <string name="flip_clock_font">字体</string>
+    <string name="flip_clock_set_countdown">设置倒计时</string>
+    <string name="flip_clock_minutes_format">%1$d分</string>
+    <string name="flip_clock_start">开始</string>
+    <string name="flip_clock_cancel">取消</string>
+    <string name="flip_clock_select_font">选择字体</string>
+    <string name="flip_clock_font_bebas_neue_desc">机场航班显示屏风格，极粗</string>
+    <string name="flip_clock_font_oswald_desc">工业复古风</string>
     <string name="current_setting">当前设置</string>
     
     <!-- 浮动播放按钮 -->

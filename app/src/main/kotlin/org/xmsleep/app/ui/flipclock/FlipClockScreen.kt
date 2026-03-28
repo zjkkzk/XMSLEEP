@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.xmsleep.app.R
 import kotlin.math.min
 
 /**
@@ -92,6 +93,7 @@ fun FlipClockScreen(
             modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             FlipClockControls(
+                context = context,
                 onBack = onBack,
                 onCountdownClick = { showCountdownDialog = true },
                 onFontClick = { showFontSelector = true },
@@ -103,6 +105,7 @@ fun FlipClockScreen(
         // 倒计时设置弹窗
         if (showCountdownDialog) {
             CountdownDialog(
+                context = context,
                 onDismiss = { showCountdownDialog = false },
                 onConfirm = { minutes ->
                     viewModel.startCountdown(minutes)
@@ -114,6 +117,7 @@ fun FlipClockScreen(
         // 字体选择弹窗
         if (showFontSelector) {
             FontSelectorDialog(
+                context = context,
                 currentFont = uiState.selectedFont,
                 onDismiss = { showFontSelector = false },
                 onSelect = { font ->
@@ -221,6 +225,7 @@ private fun FlipClockContent(
 
 @Composable
 private fun FlipClockControls(
+    context: android.content.Context,
     onBack: () -> Unit,
     onCountdownClick: () -> Unit,
     onFontClick: () -> Unit,
@@ -248,7 +253,7 @@ private fun FlipClockControls(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "返回",
+                    contentDescription = context.getString(R.string.flip_clock_back),
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -262,7 +267,7 @@ private fun FlipClockControls(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Timer,
-                        contentDescription = "取消倒计时",
+                        contentDescription = context.getString(R.string.flip_clock_cancel_countdown),
                         tint = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
@@ -275,7 +280,7 @@ private fun FlipClockControls(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Timer,
-                        contentDescription = "倒计时",
+                        contentDescription = context.getString(R.string.flip_clock_countdown),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -289,7 +294,7 @@ private fun FlipClockControls(
             ) {
                 Icon(
                     imageVector = Icons.Default.TextFields,
-                    contentDescription = "字体",
+                    contentDescription = context.getString(R.string.flip_clock_font),
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -299,6 +304,7 @@ private fun FlipClockControls(
 
 @Composable
 private fun CountdownDialog(
+    context: android.content.Context,
     onDismiss: () -> Unit,
     onConfirm: (Int) -> Unit
 ) {
@@ -310,7 +316,7 @@ private fun CountdownDialog(
         containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
-                text = "设置倒计时",
+                text = context.getString(R.string.flip_clock_set_countdown),
                 color = MaterialTheme.colorScheme.onSurface
             )
         },
@@ -330,7 +336,7 @@ private fun CountdownDialog(
                             FilterChip(
                                 selected = selectedMinutes == minutes,
                                 onClick = { selectedMinutes = minutes },
-                                label = { Text("${minutes}分") },
+                                label = { Text(context.getString(R.string.flip_clock_minutes_format, minutes)) },
                                 modifier = Modifier.weight(1f),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -347,7 +353,7 @@ private fun CountdownDialog(
                             FilterChip(
                                 selected = selectedMinutes == minutes,
                                 onClick = { selectedMinutes = minutes },
-                                label = { Text("${minutes}分") },
+                                label = { Text(context.getString(R.string.flip_clock_minutes_format, minutes)) },
                                 modifier = Modifier.weight(1f),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -367,12 +373,12 @@ private fun CountdownDialog(
                     }
                 }
             ) {
-                Text("开始", color = MaterialTheme.colorScheme.primary)
+                Text(context.getString(R.string.flip_clock_start), color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                Text(context.getString(R.string.flip_clock_cancel), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         }
     )
@@ -380,6 +386,7 @@ private fun CountdownDialog(
 
 @Composable
 private fun FontSelectorDialog(
+    context: android.content.Context,
     currentFont: ClockFont,
     onDismiss: () -> Unit,
     onSelect: (ClockFont) -> Unit
@@ -389,7 +396,7 @@ private fun FontSelectorDialog(
         containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
-                text = "选择字体",
+                text = context.getString(R.string.flip_clock_select_font),
                 color = MaterialTheme.colorScheme.onSurface
             )
         },
@@ -436,7 +443,7 @@ private fun FontSelectorDialog(
                                     )
                                 )
                                 Text(
-                                    text = font.description,
+                                    text = context.getString(font.descriptionResId),
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         color = if (isSelected) {
                                             MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
@@ -467,7 +474,7 @@ private fun FontSelectorDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                Text(context.getString(R.string.flip_clock_cancel), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
             }
         }
     )
