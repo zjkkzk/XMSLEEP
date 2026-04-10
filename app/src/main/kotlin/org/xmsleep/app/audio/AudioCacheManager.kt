@@ -425,15 +425,15 @@ class AudioCacheManager private constructor(context: Context) {
     
     /**
      * 删除指定音频的缓存
+     * 支持多种格式：.mp3, .ogg, .wav
      */
     fun deleteCache(soundId: String) {
-        val file = File(cacheDir, "$soundId.mp3")
-        if (file.exists()) {
-            file.delete()
-        }
-        val wavFile = File(cacheDir, "$soundId.wav")
-        if (wavFile.exists()) {
-            wavFile.delete()
+        val formats = listOf("mp3", "ogg", "wav")
+        for (format in formats) {
+            val file = File(cacheDir, "$soundId.$format")
+            if (file.exists()) {
+                file.delete()
+            }
         }
     }
 }

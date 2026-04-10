@@ -396,32 +396,32 @@ fun SoundsScreen(
         }
     }
     
-    // 天气数据获取
+    // 天气数据获取（首次加载）
     LaunchedEffect(weatherEnabled) {
         if (!weatherEnabled) {
             currentWeather = null
             return@LaunchedEffect
         }
-        
+
         // 先尝试加载上次缓存的天气
         val lastWeather = WeatherSoundMapper.getLastWeather(context)
         if (lastWeather != null) {
             currentWeather = lastWeather
         }
-        
+
         // 检查位置权限
         val hasLocationPermission = androidx.core.content.ContextCompat.checkSelfPermission(
             context, android.Manifest.permission.ACCESS_COARSE_LOCATION
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        
+
         if (!hasLocationPermission) return@LaunchedEffect
-        
+
         // 获取位置并刷新天气
         try {
             val locationManager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
             val location = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
                 ?: locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
-            
+
             if (location != null) {
                 val weatherService = WeatherService()
                 val result = weatherService.getWeather(location.latitude, location.longitude)
@@ -437,6 +437,44 @@ fun SoundsScreen(
             }
         } catch (e: Exception) {
             Logger.e("SoundsScreen", "获取天气失败: ${e.message}")
+        }
+    }
+
+    // 定期刷新天气数据（每5分钟）
+    LaunchedEffect(weatherEnabled) {
+        if (!weatherEnabled) return@LaunchedEffect
+        while (true) {
+            delay(5 * 60 * 1000) // 5分钟刷新一次
+
+            // 检查位置权限
+            val hasLocationPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (!hasLocationPermission) continue
+
+            // 获取位置并刷新天气
+            try {
+                val locationManager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
+                val location = locationManager.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+                    ?: locationManager.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+
+                if (location != null) {
+                    val weatherService = WeatherService()
+                    val result = weatherService.getWeather(location.latitude, location.longitude)
+                    result.onSuccess { data ->
+                        currentWeather = data
+                        WeatherSoundMapper.saveLastWeather(
+                            context, data.weatherCode,
+                            location.latitude, location.longitude,
+                            data.temperature, data.cityName,
+                            data.humidity, data.feelsLike
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Logger.e("SoundsScreen", "获取天气失败: ${e.message}")
+            }
         }
     }
     
