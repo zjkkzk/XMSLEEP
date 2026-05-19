@@ -49,8 +49,18 @@ enum class BackgroundSelection(
      * 背景动画 5 - 青绿色调
      * 提取的主导颜色: #8DA89C (RGB: 141, 168, 156)
      */
-    Background5("bg_5", R.drawable.bg_animation_5, R.drawable.bg_animation_5_thumb_png, Color(0xFF8DA89C));
-    
+    Background5("bg_5", R.drawable.bg_animation_5, R.drawable.bg_animation_5_thumb_png, Color(0xFF8DA89C)),
+
+    /**
+     * 背景动画 6 - 蓝色调
+     */
+    Background6("bg_6", R.drawable.bg_animation_6, R.drawable.bg_animation_6_thumb_png, Color(0xFF5B9BD5)),
+
+    /**
+     * 背景动画 7 - 绿色调
+     */
+    Background7("bg_7", R.drawable.bg_animation_7, R.drawable.bg_animation_7_thumb_png, Color(0xFF7CB342));
+
     companion object {
         /**
          * 从字符串值解析枚举
@@ -82,6 +92,8 @@ enum class BackgroundSelection(
             Background3 -> context.getString(R.string.background_3)
             Background4 -> context.getString(R.string.background_4)
             Background5 -> context.getString(R.string.background_5)
+            Background6 -> context.getString(R.string.background_6)
+            Background7 -> context.getString(R.string.background_7)
         }
     }
     

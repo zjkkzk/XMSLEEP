@@ -20,65 +20,6 @@ import org.xmsleep.app.i18n.LanguageManager
 import org.xmsleep.app.utils.Logger
 
 /**
- * 缓存清理对话框
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ClearCacheDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    isClearing: Boolean
-) {
-    val context = LocalContext.current
-    AlertDialog(
-        onDismissRequest = { if (!isClearing) onDismiss() },
-        title = { Text(context.getString(R.string.clear_cache)) },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(context.getString(R.string.confirm_clear_cache))
-                if (isClearing) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                        Text(
-                            context.getString(R.string.clearing),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    Text(
-                        context.getString(R.string.this_will_clear_all_cache_data),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                enabled = !isClearing
-            ) {
-                Text(context.getString(R.string.ok))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                enabled = !isClearing
-            ) {
-                Text(context.getString(R.string.cancel))
-            }
-        }
-    )
-}
-
-/**
  * 关于对话框 - 显示应用信息、版本、版权和使用说明
  */
 @Composable

@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,12 +29,10 @@ fun ThemeSettingsScreen(
     selectedColor: Color,
     useDynamicColor: Boolean,
     useBlackBackground: Boolean,
-    showRecentPlayDialog: Boolean,
     onDarkModeChange: (DarkModeOption) -> Unit,
     onColorChange: (Color) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
     onBlackBackgroundChange: (Boolean) -> Unit,
-    onShowRecentPlayDialogChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onScrollDetected: () -> Unit = {} // 滚动检测回调
 ) {
@@ -172,28 +169,6 @@ fun ThemeSettingsScreen(
                                 )
                             },
                             onClick = { onBlackBackgroundChange(!useBlackBackground) }
-                        )
-                    )
-                    
-                    // 4. 最近播放弹窗开关
-                    add(
-                        SettingsCategoryItem(
-                            icon = Icons.Filled.History,
-                            title = { Text(context.getString(R.string.show_recent_play_dialog)) },
-                            description = { 
-                                Text(
-                                    context.getString(R.string.show_recent_play_dialog_description),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            trailingContent = {
-                                Switch(
-                                    checked = showRecentPlayDialog,
-                                    onCheckedChange = onShowRecentPlayDialogChange
-                                )
-                            },
-                            onClick = { onShowRecentPlayDialogChange(!showRecentPlayDialog) }
                         )
                     )
                 }

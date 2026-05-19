@@ -19,12 +19,14 @@ class ThemeColorExtractor(private val context: Context) {
     
     /**
      * 同步提取主题色（用于应用启动时）
-     * 
+     *
      * @param drawableResId Drawable 资源 ID
      * @return 提取的主题色，如果提取失败则返回 null
      */
     fun extractDominantColorSync(@DrawableRes drawableResId: Int): Color? {
         return try {
+            Logger.d("ThemeColorExtractor", "开始提取资源: $drawableResId")
+            
             // 1. 加载 WebP 的第一帧作为 Bitmap
             val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 // API 28+ 使用 ImageDecoder
@@ -45,6 +47,13 @@ class ThemeColorExtractor(private val context: Context) {
                 )
             }
             
+            if (bitmap == null) {
+                Logger.e("ThemeColorExtractor", "Bitmap 解码失败")
+                return null
+            }
+            
+            Logger.d("ThemeColorExtractor", "Bitmap 大小: ${bitmap.width}x${bitmap.height}")
+            
             // 2. 使用 Palette 提取颜色
             val palette = Palette.from(bitmap)
                 .maximumColorCount(24)
@@ -56,10 +65,12 @@ class ThemeColorExtractor(private val context: Context) {
             // 4. 清理 Bitmap
             bitmap.recycle()
             
-            // 5. 转换为 Compose Color (需要转换为 ULong)
-            Color(extractedColor.toULong() or 0xFF000000UL)
+            // 5. 转换为 Compose Color
+            val color = Color(extractedColor.toULong() or 0xFF000000UL)
+            Logger.d("ThemeColorExtractor", "提取颜色成功: #${extractedColor.toString(16).uppercase()}")
+            color
         } catch (e: Exception) {
-            Logger.e("ThemeColorExtractor", "同步提取主题色失败: ${e.message}")
+            Logger.e("ThemeColorExtractor", "同步提取主题色失败: ${e.message}", e)
             null
         }
     }

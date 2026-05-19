@@ -24,8 +24,8 @@ class AudioCacheManager private constructor(context: Context) {
     companion object {
         private const val TAG = "AudioCacheManager"
         private const val CACHE_DIR_NAME = "audio_cache"
-        private const val MAX_CACHE_SIZE = 100 * 1024 * 1024L // 100MB
-        private const val MAX_CACHE_FILES = 50 // 最多缓存50个文件
+        private const val MAX_CACHE_SIZE = 500 * 1024 * 1024L // 500MB
+        private const val MAX_CACHE_FILES = 200 // 最多缓存200个文件
         private const val MAX_RETRY_COUNT = 3  // 最大重试次数
         private const val INITIAL_RETRY_DELAY = 500L  // 初始重试延迟（毫秒）
         
@@ -152,11 +152,6 @@ class AudioCacheManager private constructor(context: Context) {
                 return@withContext Result.success(file)
             }
             
-            // 检查缓存空间
-            ensureCacheSpace()
-            // 缓存清理后，等待100ms确保文件系统同步完成
-            Thread.sleep(100L)
-            
             // 获取文件扩展名
             val extension = url.substringAfterLast('.', "mp3")
             val file = File(cacheDir, "$soundId.$extension")
@@ -279,11 +274,6 @@ class AudioCacheManager private constructor(context: Context) {
             return@flow
         }
         
-        // 检查缓存空间
-        ensureCacheSpace()
-        // 缓存清理后，等待100ms确保文件系统同步完成
-        kotlinx.coroutines.delay(100L)
-        
         // 获取文件扩展名
         val extension = url.substringAfterLast('.', "mp3")
         val file = File(cacheDir, "$soundId.$extension")
@@ -360,49 +350,6 @@ class AudioCacheManager private constructor(context: Context) {
         Logger.e(TAG, "下载音频失败 (来源: $source)，已重试 $MAX_RETRY_COUNT 次: ${lastException?.message}")
         emit(DownloadProgress.Error(lastException ?: IOException("下载失败")))
     }.flowOn(Dispatchers.IO)
-    
-    /**
-     * 确保缓存空间足够
-     * 使用更安全的删除策略，避免与正在进行的播放发生冲突
-     */
-    private fun ensureCacheSpace() {
-        val files = cacheDir.listFiles() ?: return
-        
-        // 按最后修改时间排序（LRU策略）
-        val sortedFiles = files.sortedBy { it.lastModified() }.toMutableList()
-        
-        // 计算当前缓存大小
-        var currentSize = sortedFiles.sumOf { it.length() }
-        
-        // 如果超过最大缓存大小或文件数，删除最旧的文件
-        // 为了避免与播放过程冲突，只删除到目标大小的80%
-        val targetSize = (MAX_CACHE_SIZE * 0.8).toLong()
-        val targetFiles = (MAX_CACHE_FILES * 0.8).toInt()
-        
-        var deletedFiles = 0
-        while ((currentSize > targetSize || sortedFiles.size > targetFiles) 
-                && sortedFiles.isNotEmpty()) {
-            val oldestFile = sortedFiles.removeAt(0)
-            val fileSize = oldestFile.length()
-            
-            try {
-                val deleted = oldestFile.delete()
-                if (deleted) {
-                    currentSize -= fileSize
-                    deletedFiles++
-                    Logger.d(TAG, "删除缓存文件: ${oldestFile.name} (${fileSize / 1024 / 1024}MB)")
-                } else {
-                    Logger.w(TAG, "删除缓存文件失败: ${oldestFile.name}")
-                }
-            } catch (e: Exception) {
-                Logger.e(TAG, "删除缓存文件异常: ${oldestFile.name} - ${e.message}")
-            }
-        }
-        
-        if (deletedFiles > 0) {
-            Logger.d(TAG, "缓存清理完成，删除了 $deletedFiles 个文件，当前大小: ${currentSize / 1024 / 1024}MB")
-        }
-    }
     
     /**
      * 获取缓存大小

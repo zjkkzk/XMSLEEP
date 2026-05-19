@@ -71,7 +71,9 @@ fun BackgroundSelectionDialog(
             BackgroundSelection.Background2,
             BackgroundSelection.Background3,
             BackgroundSelection.Background4,
-            BackgroundSelection.Background5
+            BackgroundSelection.Background5,
+            BackgroundSelection.Background6,
+            BackgroundSelection.Background7
         )
     }
 

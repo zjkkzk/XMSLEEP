@@ -213,6 +213,7 @@ fun MainScreen(
     // 监听生命周期，当应用恢复时检查更新和待安装的文件
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
+    val timerManager = remember { org.xmsleep.app.timer.TimerManager.getInstance() }
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -654,15 +655,10 @@ fun MainScreen(
                     selectedColor = selectedColor,
                     useDynamicColor = useDynamicColor,
                     useBlackBackground = useBlackBackground,
-                    showRecentPlayDialog = showRecentPlayDialogSetting,
                     onDarkModeChange = onDarkModeChange,
                     onColorChange = onColorChange,
                     onDynamicColorChange = onDynamicColorChange,
                     onBlackBackgroundChange = onBlackBackgroundChange,
-                    onShowRecentPlayDialogChange = { enabled ->
-                        showRecentPlayDialogSetting = enabled
-                        org.xmsleep.app.preferences.PreferencesManager.saveShowRecentPlayDialog(context, enabled)
-                    },
                     onBack = { navigator.popBackStack() },
                     onScrollDetected = {
                         // 滚动时收缩悬浮按钮
@@ -871,13 +867,54 @@ fun MainScreen(
         LaunchedEffect(Unit) {
             if (!hasCheckedRecentPlayOnLaunch) {
                 hasCheckedRecentPlayOnLaunch = true
-                // 检查用户是否开启了最近播放弹窗
-                val shouldShow = org.xmsleep.app.preferences.PreferencesManager.getShowRecentPlayDialog(context)
-                if (shouldShow) {
-                    val audioManager = org.xmsleep.app.audio.AudioManager.getInstance()
-                    if (audioManager.hasRecentSounds(context)) {
-                        delay(500)
-                        showRecentPlayDialog = true
+
+                // 1. 检查是否开启了自动播放功能
+                val autoPlayEnabled = org.xmsleep.app.preferences.PreferencesManager.getAutoPlayOnStart(context)
+                if (autoPlayEnabled) {
+                    // 获取当前激活预设的声音列表
+                    val soundsToPlay = when (activePreset) {
+                        1 -> preset1Sounds.value
+                        2 -> preset2Sounds.value
+                        3 -> preset3Sounds.value
+                        else -> preset1Sounds.value
+                    }
+
+                    // 检查远程音频
+                    val remotePinned = when (activePreset) {
+                        1 -> org.xmsleep.app.preferences.PreferencesManager.getPresetRemotePinned(context, 1)
+                        2 -> org.xmsleep.app.preferences.PreferencesManager.getPresetRemotePinned(context, 2)
+                        3 -> org.xmsleep.app.preferences.PreferencesManager.getPresetRemotePinned(context, 3)
+                        else -> emptySet()
+                    }
+
+                    if (soundsToPlay.isNotEmpty() || remotePinned.isNotEmpty()) {
+                        val audioManager = org.xmsleep.app.audio.AudioManager.getInstance()
+
+                        // 播放本地预设声音
+                        soundsToPlay.forEach { sound ->
+                            audioManager.playSound(context, sound)
+                        }
+
+                        // 检查是否设置了自动倒计时
+                        val autoCountdownMinutes = org.xmsleep.app.preferences.PreferencesManager.getAutoCountdownMinutes(context)
+                        if (autoCountdownMinutes > 0) {
+                            scope.launch {
+                                delay(500)
+                                timerManager.startTimer(autoCountdownMinutes)
+                            }
+                        }
+
+                        Logger.d("MainScreen", "自动播放预设 $activePreset 音频: 本地 ${soundsToPlay.size}, 远程 ${remotePinned.size}")
+                    }
+                } else {
+                    // 2. 如果没有开启自动播放，检查是否开启了最近播放弹窗
+                    val shouldShow = org.xmsleep.app.preferences.PreferencesManager.getShowRecentPlayDialog(context)
+                    if (shouldShow) {
+                        val audioManager = org.xmsleep.app.audio.AudioManager.getInstance()
+                        if (audioManager.hasRecentSounds(context)) {
+                            delay(500)
+                            showRecentPlayDialog = true
+                        }
                     }
                 }
             }

@@ -20,10 +20,14 @@
     <string name="cancel">Cancel</string>
     <string name="color_palette">Color Palette</string>
     <string name="confirm_clear_cache">Are you sure you want to clear all cache data?</string>
-    <string name="appearance">Appearance</string>
+    <string name="appearance">Features</string>
     <string name="system">System</string>
     <string name="other">Other</string>
-    <string name="appearance_mode_theme_color">Appearance Mode, Theme Color</string>
+    <string name="appearance_mode_theme_color">Mode, Theme Color</string>
+    <string name="feature_settings">Feature Settings</string>
+    <string name="feature_settings_description">Customize feature settings</string>
+    <string name="feature_dialog_title">Features</string>
+
     <string name="clear_app_cache_data">Clear App Cache Data</string>
     <string name="check_and_update_to_latest_version">Check and Update to Latest Version</string>
     <string name="view_app_info_version_copyright">View App Info, Version and Copyright</string>
@@ -67,6 +71,8 @@
     <string name="background_3">Background 3</string>
     <string name="background_4">Background 4</string>
     <string name="background_5">Background 5</string>
+    <string name="background_6">Background 6</string>
+    <string name="background_7">Background 7</string>
     <string name="theme_color">Theme Color</string>
     <string name="theme_color_disabled_hint">Select \"No Background\" to change theme color</string>
     <string name="background_preview">Preview Background</string>
@@ -159,8 +165,13 @@
     <string name="installing">Installing</string>
     <string name="starting_installer">Starting installer…</string>
     <string name="install_failed">Install Failed</string>
-    <string name="join_group">Join Telegram Group</string>
-    <string name="join_group_description">Share your thoughts</string>
+    <string name="join_group">Community</string>
+    <string name="join_group_description">Follow me for latest updates</string>
+    <string name="community_dialog_title">Community</string>
+    <string name="open_github">GitHub</string>
+    <string name="open_github_description">View project source code</string>
+    <string name="join_telegram">Join Telegram Group</string>
+    <string name="join_telegram_description">Share your thoughts</string>
     <string name="load_failed">Load failed: %1$s</string>
     <string name="all_categories">All</string>
     <string name="privacy_policy_title">Privacy Policy</string>
@@ -527,8 +538,12 @@ If you have any questions, please contact us through the in-app contact method.<
     <string name="widget_default_author">Unknown</string>
     <string name="widget_loading">Loading...</string>
     <string name="widget_refresh_failed">Refresh failed</string>
-    
-    <!-- Recent Play Dialog Settings -->
-    <string name="show_recent_play_dialog">Show Recent Play on Launch</string>
-    <string name="show_recent_play_dialog_description">Display quick access dialog for recently played audio when app starts</string>
+
+    <!-- Recent play dialog settings -->
+    <string name="show_recent_play_dialog">Recent Play</string>
+    <string name="show_recent_play_dialog_description">Show recent play popup on launch</string>
+    <string name="auto_play_on_start">Auto Play on Start</string>
+    <string name="auto_play_on_start_description">Auto play the last used preset audio when app starts</string>
+    <string name="auto_play_need_preset_tip">Please add audio in the preset module first</string>
+    <string name="tip">Tip</string>
 </resources>

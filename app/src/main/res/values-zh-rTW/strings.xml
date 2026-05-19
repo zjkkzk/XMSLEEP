@@ -20,10 +20,14 @@
     <string name="cancel">取消</string>
     <string name="color_palette">調色板</string>
     <string name="confirm_clear_cache">確定要清理所有快取資料嗎？</string>
-    <string name="appearance">外觀</string>
+    <string name="appearance">特色</string>
     <string name="system">設定</string>
     <string name="other">其他</string>
-    <string name="appearance_mode_theme_color">外觀模式、主題色</string>
+    <string name="appearance_mode_theme_color">模式、主題色</string>
+    <string name="feature_settings">特色功能</string>
+    <string name="feature_settings_description">自訂特色功能設定</string>
+    <string name="feature_dialog_title">特色功能</string>
+
     <string name="clear_app_cache_data">清理應用快取資料</string>
     <string name="check_and_update_to_latest_version">檢查並更新到最新版本</string>
     <string name="view_app_info_version_copyright">查看應用資訊、版本和版權</string>
@@ -67,6 +71,8 @@
     <string name="background_3">背景 3</string>
     <string name="background_4">背景 4</string>
     <string name="background_5">背景 5</string>
+    <string name="background_6">背景 6</string>
+    <string name="background_7">背景 7</string>
     <string name="theme_color">主題顏色</string>
     <string name="theme_color_disabled_hint">選擇"無背景"後可切換主題顏色</string>
     <string name="background_preview">預覽背景</string>
@@ -175,8 +181,13 @@
     <string name="installing">正在安裝</string>
     <string name="starting_installer">正在啟動安裝程序…</string>
     <string name="install_failed">安裝失敗</string>
-    <string name="join_group">加入Telegram群聊</string>
-    <string name="join_group_description">來表達你的想法</string>
+    <string name="join_group">社區</string>
+    <string name="join_group_description">關注我獲取最新資訊</string>
+    <string name="community_dialog_title">社區</string>
+    <string name="open_github">GitHub</string>
+    <string name="open_github_description">查看項目原始碼</string>
+    <string name="join_telegram">加入Telegram群聊</string>
+    <string name="join_telegram_description">來表達你的想法</string>
     <string name="load_failed">載入失敗: %1$s</string>
     <string name="all_categories">全部</string>
     <string name="privacy_policy_title">隱私政策</string>
@@ -511,6 +522,10 @@
     <string name="widget_refresh_failed">刷新失敗</string>
     
     <!-- 最近播放彈窗設定 -->
-    <string name="show_recent_play_dialog">啟動時顯示最近播放</string>
-    <string name="show_recent_play_dialog_description">應用啟動時顯示最近播放音頻的快速入口彈窗</string>
+    <string name="show_recent_play_dialog">最近播放</string>
+    <string name="show_recent_play_dialog_description">啟動時顯示最近播放彈窗</string>
+    <string name="auto_play_on_start">開啟應用自動播放</string>
+    <string name="auto_play_on_start_description">應用啟動時自動播放上次使用的預設音頻</string>
+    <string name="auto_play_need_preset_tip">請先在預設模組中添加音頻</string>
+    <string name="tip">提示</string>
 </resources>

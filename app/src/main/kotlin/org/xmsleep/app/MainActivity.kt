@@ -28,6 +28,7 @@ import org.xmsleep.app.ui.MainScreen
 import org.xmsleep.app.ui.BackgroundSelection
 import org.xmsleep.app.ui.CrashScreen
 import org.xmsleep.app.utils.Logger
+import org.xmsleep.app.utils.ThemeColorExtractor
 import org.xmsleep.app.crash.CrashHandler
 import org.xmsleep.app.crash.getCrashInfo
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -183,22 +184,35 @@ fun XMSLEEPApp() {
     // 背景动画的主题色（从缩略图同步提取）
     val backgroundThemeColors = remember {
         val colors = mutableMapOf<BackgroundSelection, Color>()
+        val extractor = ThemeColorExtractor(context)
         
         Logger.d("MainActivity", "=== 开始提取背景主题色 ===")
         
-        // 直接使用预定义的主题色（不再从缩略图提取）
         BackgroundSelection.entries.forEach { bg ->
-            Logger.d("MainActivity", "检查背景: ${bg.name}, themeColor=${bg.themeColor}")
-            if (bg != BackgroundSelection.None && bg.themeColor != null) {
-                colors[bg] = bg.themeColor
-                val colorValue = bg.themeColor.value
-                val colorHex = colorValue.toString(16).padStart(16, '0').substring(8).uppercase()
-                Logger.d("MainActivity", "✓ 背景 ${bg.name}: value=$colorValue, hex=#$colorHex, color=${bg.themeColor}")
+            if (bg != BackgroundSelection.None) {
+                val color = if (bg.themeColor != null) {
+                    bg.themeColor
+                } else if (bg.thumbnailResourceId != null) {
+                    Logger.d("MainActivity", "尝试从缩略图提取: ${bg.thumbnailResourceId}")
+                    val extracted = extractor.extractDominantColorSync(bg.thumbnailResourceId!!)
+                    Logger.d("MainActivity", "提取结果: $extracted")
+                    extracted
+                } else {
+                    null
+                }
+                
+                if (color != null) {
+                    colors[bg] = color
+                    val colorValue = color.value
+                    val colorHex = colorValue.toString(16).padStart(16, '0').substring(8).uppercase()
+                    Logger.d("MainActivity", "✓ 背景 ${bg.name}: hex=#$colorHex")
+                } else {
+                    Logger.d("MainActivity", "✗ 背景 ${bg.name}: 提取失败")
+                }
             }
         }
         
         Logger.d("MainActivity", "=== 背景主题色提取完成，共提取 ${colors.size} 个颜色 ===")
-        Logger.d("MainActivity", "Map内容: $colors")
         colors.toMap()
     }
     
@@ -323,19 +337,22 @@ fun XMSLEEPApp() {
                             Logger.d("MainActivity", "恢复调色板颜色: #$colorHex")
                         } else {
                             // 应用背景的主题色
-                            val themeColor = backgroundThemeColors[newBackground]
+                            Logger.d("MainActivity", "切换到背景: ${newBackground.name}, 预设颜色: ${backgroundThemeColors[newBackground]}")
                             
+                            var themeColor = backgroundThemeColors[newBackground]
+                            
+                            // 如果预设颜色为 null，尝试从缩略图提取
+                            if (themeColor == null && newBackground.thumbnailResourceId != null) {
+                                Logger.d("MainActivity", "预设颜色为null，从缩略图提取: ${newBackground.thumbnailResourceId}")
+                                themeColor = ThemeColorExtractor(context).extractDominantColorSync(newBackground.thumbnailResourceId!!)
+                                Logger.d("MainActivity", "实时提取结果: $themeColor")
+                            }
+
                             if (themeColor != null) {
                                 selectedColor = themeColor
-                                
-                                val colorHex = themeColor.value.toString(16).padStart(16, '0').substring(8).uppercase()
-                                val isDefault = themeColor == DefaultThemeColor
-                                Logger.d("MainActivity", "应用背景主题色: #$colorHex (是否默认: $isDefault)")
-                                Logger.d("MainActivity", "当前 useDynamicColor: $useDynamicColor")
-                                Logger.d("MainActivity", "将使用: ${if (isDefault && useDynamicColor) "系统动态颜色" else "背景主题色"}")
+                                Logger.d("MainActivity", "应用主题色成功")
                             } else {
                                 Logger.e("MainActivity", "✗ 未找到背景主题色: $newBackground")
-                                Logger.d("MainActivity", "可用的背景主题色: ${backgroundThemeColors.keys}")
                             }
                         }
                         

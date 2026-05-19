@@ -102,6 +102,8 @@ object Constants {
         
         // 最近播放弹窗开关
         const val SHOW_RECENT_PLAY_DIALOG = "show_recent_play_dialog"
+        // 应用启动自动播放
+        const val AUTO_PLAY_ON_START = "auto_play_on_start"
         // 一言一句小组件相关
         const val QUOTE_WIDGET_ADDED = "quote_widget_added"
         

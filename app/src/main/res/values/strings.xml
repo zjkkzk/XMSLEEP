@@ -21,10 +21,13 @@
     <string name="cancel">取消</string>
     <string name="color_palette">调色板</string>
     <string name="confirm_clear_cache">确定要清理所有缓存数据吗？</string>
-    <string name="appearance">外观</string>
+    <string name="appearance">特色</string>
     <string name="system">设置</string>
     <string name="other">其他</string>
-    <string name="appearance_mode_theme_color">外观模式、主题色</string>
+    <string name="appearance_mode_theme_color">模式、主题色</string>
+    <string name="feature_settings">特色功能</string>
+    <string name="feature_settings_description">自定义特色功能设置</string>
+    <string name="feature_dialog_title">特色功能</string>
 
     <string name="clear_app_cache_data">清理应用缓存数据</string>
     <string name="check_and_update_to_latest_version">检查并更新到最新版本</string>
@@ -70,6 +73,8 @@
     <string name="background_3">背景 3</string>
     <string name="background_4">背景 4</string>
     <string name="background_5">背景 5</string>
+    <string name="background_6">背景 6</string>
+    <string name="background_7">背景 7</string>
     <string name="theme_color">主题颜色</string>
     <string name="theme_color_disabled_hint">选择"无背景"后可切换主题颜色</string>
     <string name="background_preview">预览背景</string>
@@ -183,8 +188,13 @@
     <string name="installing">正在安装</string>
     <string name="starting_installer">正在启动安装程序…</string>
     <string name="install_failed">安装失败</string>
-    <string name="join_group">加入Telegram群聊</string>
-    <string name="join_group_description">来表达你的想法</string>
+    <string name="join_group">社区</string>
+    <string name="join_group_description">关注我获取最新资讯</string>
+    <string name="community_dialog_title">社区</string>
+    <string name="open_github">GitHub</string>
+    <string name="open_github_description">查看项目源码</string>
+    <string name="join_telegram">加入Telegram群聊</string>
+    <string name="join_telegram_description">来表达你的想法</string>
     <string name="load_failed">加载失败: %1$s</string>
     <string name="all_categories">全部</string>
     <string name="privacy_policy_title">隐私政策</string>
@@ -557,6 +567,10 @@
     <string name="widget_refresh">刷新</string>
     
     <!-- 最近播放弹窗设置 -->
-    <string name="show_recent_play_dialog">启动时显示最近播放</string>
-    <string name="show_recent_play_dialog_description">应用启动时显示最近播放音频的快速入口弹窗</string>
+    <string name="show_recent_play_dialog">最近播放</string>
+    <string name="show_recent_play_dialog_description">启动时显示最近播放弹窗</string>
+    <string name="auto_play_on_start">开启应用自动播放</string>
+    <string name="auto_play_on_start_description">应用启动时自动播放上次使用的预设音频</string>
+    <string name="auto_play_need_preset_tip">请先在预设模块中添加音频</string>
+    <string name="tip">提示</string>
 </resources>

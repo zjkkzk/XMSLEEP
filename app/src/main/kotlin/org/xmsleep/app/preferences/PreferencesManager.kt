@@ -46,6 +46,7 @@ object PreferencesManager {
     private val KEY_AUTO_COUNTDOWN_MINUTES = Constants.PrefsKeys.AUTO_COUNTDOWN_MINUTES
     private val KEY_KEEP_SCREEN_ON = Constants.PrefsKeys.KEEP_SCREEN_ON
     private val KEY_SHOW_RECENT_PLAY_DIALOG = Constants.PrefsKeys.SHOW_RECENT_PLAY_DIALOG
+    private val KEY_AUTO_PLAY_ON_START = Constants.PrefsKeys.AUTO_PLAY_ON_START
     private val KEY_QUOTE_WIDGET_ADDED = Constants.PrefsKeys.QUOTE_WIDGET_ADDED
     
     /**
@@ -78,7 +79,7 @@ object PreferencesManager {
     /**
      * 获取深色模式设置
      */
-    fun getDarkMode(context: Context, default: DarkModeOption = DarkModeOption.AUTO): DarkModeOption {
+    fun getDarkMode(context: Context, default: DarkModeOption = DarkModeOption.DARK): DarkModeOption {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val modeName = prefs.getString(KEY_DARK_MODE, null)
         return if (modeName != null) {
@@ -623,7 +624,25 @@ object PreferencesManager {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(KEY_SHOW_RECENT_PLAY_DIALOG, true)
     }
-    
+
+    /**
+     * 保存应用启动自动播放设置
+     * @param enabled 是否启用
+     */
+    fun setAutoPlayOnStart(context: Context, enabled: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_AUTO_PLAY_ON_START, enabled).apply()
+    }
+
+    /**
+     * 获取应用启动自动播放设置
+     * @return 是否启用，默认为 false
+     */
+    fun getAutoPlayOnStart(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_AUTO_PLAY_ON_START, false)
+    }
+
     /**
      * 保存一言一句小组件是否已添加
      * @param added 是否已添加

@@ -770,6 +770,7 @@ fun StarSkyScreen(
                                     val currentlyPlaying = audioManager.isPlayingRemoteSound(sound.id)
                                     if (currentlyPlaying) {
                                         audioManager.pauseRemoteSound(sound.id)
+                                        playingSounds = playingSounds - sound.id
                                         return@launch
                                     }
                                     
@@ -922,6 +923,7 @@ fun StarSkyScreen(
                                         val currentlyPlaying = audioManager.isPlayingRemoteSound(sound.id)
                                         if (currentlyPlaying) {
                                             audioManager.pauseRemoteSound(sound.id)
+                                            playingSounds = playingSounds - sound.id
                                             return@launch
                                         }
                                         

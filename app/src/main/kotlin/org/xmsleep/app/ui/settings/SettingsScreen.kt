@@ -11,6 +11,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -40,7 +41,6 @@ import org.xmsleep.app.i18n.LanguageManager
 import org.xmsleep.app.Constants
 import org.xmsleep.app.ui.components.AboutDialog
 import org.xmsleep.app.ui.components.BackgroundSelectionDialog
-import org.xmsleep.app.ui.components.ClearCacheDialog
 import org.xmsleep.app.ui.components.LanguageSelectionDialog
 import org.xmsleep.app.ui.components.SwitchItem
 import org.xmsleep.app.ui.BackgroundSelection
@@ -81,14 +81,12 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val audioManager = remember { org.xmsleep.app.audio.AudioManager.getInstance() }
     val timerManager = remember { org.xmsleep.app.timer.TimerManager.getInstance() }
-    var showClearCacheDialog by remember { mutableStateOf(false) }
-    var isClearingCache by remember { mutableStateOf(false) }
-    var cacheSize by remember { mutableStateOf(0L) }
-    var isCalculatingCache by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showBackgroundDialog by remember { mutableStateOf(false) }
+    var showFeatureDialog by remember { mutableStateOf(false) }
+    var showCommunityDialog by remember { mutableStateOf(false) }
     var showAutoCountdownDialog by remember { mutableStateOf(false) }
     var autoCountdownMinutes by remember { 
         mutableIntStateOf(org.xmsleep.app.preferences.PreferencesManager.getAutoCountdownMinutes(context))
@@ -136,42 +134,6 @@ fun SettingsScreen(
             packageInfo?.versionName ?: "1.0.0"
         } catch (e: Exception) {
             "1.0.0"
-        }
-    }
-
-    // 定期更新缓存大小
-    LaunchedEffect(Unit) {
-        while (true) {
-            isCalculatingCache = true
-            cacheSize = calculateCacheSize(context)
-            isCalculatingCache = false
-            
-            // 已禁用自动缓存清理，避免删除用户下载的音频
-            // 如需清理缓存，请用户手动点击"清理缓存"按钮
-            /*
-            // 检查缓存是否超过200M (200 * 1024 * 1024 字节)
-            val thresholdBytes = 200L * 1024 * 1024
-            if (cacheSize > thresholdBytes && !isClearingCache) {
-                // 自动清理缓存
-                isClearingCache = true
-                scope.launch {
-                    try {
-                        clearApplicationCache(context)
-                        cacheSize = 0L
-                        Toast.makeText(context, context.getString(R.string.cache_auto_cleared), Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
-                        Toast.makeText(context, context.getString(R.string.auto_clear_failed, e.message ?: ""), Toast.LENGTH_SHORT).show()
-                    } finally {
-                        isClearingCache = false
-                        // 清理完成后重新计算缓存大小
-                        cacheSize = calculateCacheSize(context)
-                    }
-                }
-            }
-            */
-            
-            // 每5秒更新一次缓存大小
-            delay(5000)
         }
     }
 
@@ -322,6 +284,26 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { showBackgroundDialog = true }
+                ),
+                SettingsCategoryItem(
+                    icon = Icons.Default.AutoAwesome,
+                    title = { Text(context.getString(R.string.feature_settings)) },
+                    description = {
+                        Text(
+                            context.getString(R.string.feature_settings_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingContent = {
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    onClick = { showFeatureDialog = true }
                 )
             )
         )
@@ -417,31 +399,6 @@ fun SettingsScreen(
             title = context.getString(R.string.other),
             items = listOf(
                 SettingsCategoryItem(
-                    icon = Icons.Default.Delete,
-                    title = { Text(context.getString(R.string.clear_cache)) },
-                    description = {
-                        Text(
-                            context.getString(R.string.clear_app_cache_data),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    trailingContent = {
-                        if (isCalculatingCache) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp)
-                        } else {
-                            Text(
-                                formatBytes(cacheSize),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    },
-                    onClick = { showClearCacheDialog = true }
-                ),
-                SettingsCategoryItem(
                     icon = Icons.Default.FormatQuote,
                     title = { Text(context.getString(R.string.daily_quote)) },
                     description = {
@@ -490,16 +447,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
-                    onClick = {
-                        val telegramUrl = Constants.TELEGRAM_URL
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(telegramUrl))
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "无法打开链接，请检查是否安装了Telegram或浏览器", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onClick = { showCommunityDialog = true }
                 ),
                 SettingsCategoryItem(
                     icon = Icons.Default.Info,
@@ -648,7 +596,239 @@ fun SettingsScreen(
                 currentLanguage = currentLanguage
             )
         }
-        
+
+        // 特色功能弹窗
+        if (showFeatureDialog) {
+            var showRecentPlayDialog by remember {
+                mutableStateOf(PreferencesManager.getShowRecentPlayDialog(context))
+            }
+            var autoPlayEnabled by remember {
+                mutableStateOf(PreferencesManager.getAutoPlayOnStart(context))
+            }
+
+            val hasPresetContent = remember {
+                (1..3).any { i ->
+                    PreferencesManager.getPresetLocalPinned(context, i).isNotEmpty() ||
+                    PreferencesManager.getPresetRemotePinned(context, i).isNotEmpty()
+                }
+            }
+
+            var showAutoPlayTip by remember { mutableStateOf(false) }
+
+            AlertDialog(
+                onDismissRequest = { showFeatureDialog = false },
+                title = {
+                    Text(
+                        text = context.getString(R.string.feature_dialog_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                text = {
+                    Column {
+                        // 启动时显示最近播放
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = context.getString(R.string.show_recent_play_dialog),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = context.getString(R.string.show_recent_play_dialog_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = showRecentPlayDialog,
+                                onCheckedChange = { enabled ->
+                                    showRecentPlayDialog = enabled
+                                    PreferencesManager.saveShowRecentPlayDialog(context, enabled)
+                                    if (enabled && autoPlayEnabled) {
+                                        autoPlayEnabled = false
+                                        PreferencesManager.setAutoPlayOnStart(context, false)
+                                    }
+                                }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // 开启应用自动播放
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = context.getString(R.string.auto_play_on_start),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = context.getString(R.string.auto_play_on_start_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (!hasPresetContent) {
+                                    IconButton(onClick = { showAutoPlayTip = true }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = context.getString(R.string.tip),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                                Switch(
+                                    checked = autoPlayEnabled,
+                                    enabled = hasPresetContent,
+                                    onCheckedChange = { enabled ->
+                                        autoPlayEnabled = enabled
+                                        PreferencesManager.setAutoPlayOnStart(context, enabled)
+                                        if (enabled && showRecentPlayDialog) {
+                                            showRecentPlayDialog = false
+                                            PreferencesManager.saveShowRecentPlayDialog(context, false)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        if (showAutoPlayTip) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = context.getString(R.string.auto_play_need_preset_tip),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showFeatureDialog = false }) {
+                        Text(context.getString(R.string.ok))
+                    }
+                }
+            )
+        }
+
+        // 社区对话框
+        if (showCommunityDialog) {
+            AlertDialog(
+                onDismissRequest = { showCommunityDialog = false },
+                title = {
+                    Text(
+                        text = context.getString(R.string.community_dialog_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // GitHub 按钮
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showCommunityDialog = false
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Constants.GITHUB_URL))
+                                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "无法打开链接", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_github),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = context.getString(R.string.open_github),
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        text = context.getString(R.string.open_github_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Telegram 按钮
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showCommunityDialog = false
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Constants.TELEGRAM_URL))
+                                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "无法打开链接，请检查是否安装了Telegram或浏览器", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_telegram),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = context.getString(R.string.join_telegram),
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        text = context.getString(R.string.join_telegram_description),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showCommunityDialog = false }) {
+                        Text(context.getString(R.string.cancel))
+                    }
+                }
+            )
+        }
+
         // 关于对话框
         if (showAboutDialog) {
             AboutDialog(
@@ -658,36 +838,6 @@ fun SettingsScreen(
             )
         }
     
-        // 缓存清理对话框
-        if (showClearCacheDialog) {
-            ClearCacheDialog(
-                onDismiss = { 
-                    if (!isClearingCache) {
-                        showClearCacheDialog = false
-                    }
-                },
-                onConfirm = {
-                    // 立即关闭对话框，避免重复显示
-                    showClearCacheDialog = false
-                    isClearingCache = true
-                    scope.launch {
-                        try {
-                            clearApplicationCache(context)
-                            cacheSize = 0L  // 清理后重置缓存大小
-                            Toast.makeText(context, "缓存清理成功", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "缓存清理失败: ${e.message ?: ""}", Toast.LENGTH_SHORT).show()
-                        } finally {
-                            isClearingCache = false
-                            // 清理完成后重新计算缓存大小
-                            cacheSize = calculateCacheSize(context)
-                        }
-                    }
-                },
-                isClearing = isClearingCache
-            )
-        }
-
         // 语言选择弹窗
         if (showLanguageDialog) {
             LanguageSelectionDialog(
