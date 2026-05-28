@@ -11,7 +11,7 @@
 
 [下载应用](#下载) • [功能特性](#功能特性) • [使用说明](#使用说明)
 
-**Language**: 中文 | [English](README_EN.md)
+**Language**: 中文 | [繁體中文](README_ZH_TW.md) | [English](README_EN.md) | [한국어](README_KO.md) | [Русский](README_RU.md) | [日本語](README_JA.md)
 
 <a href="https://hellogithub.com/repository/Tosencen/XMSLEEP" target="_blank"><img src="https://abroad.hellogithub.com/v1/widgets/recommend.svg?rid=3cbf370c9f534ea3bf3695b7f9b8bd19&claim_uid=Gxvd2eIyHm54S9p" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 </div>
