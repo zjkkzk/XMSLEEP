@@ -385,7 +385,7 @@ fun RadioScreen(
         )
 
         FloatingRadioBubble(
-            visible = playingRoomId != null,
+            visible = playingRoomId != null && isPlaying,
             room = playingRoomInfo,
             roomId = playingRoomId,
             isPlaying = isPlaying,

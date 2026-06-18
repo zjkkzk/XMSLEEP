@@ -181,9 +181,6 @@ fun FloatingRadioBubble(
                         expandedContainerColor = expandedContainerColor,
                         expandedContentColor = buttonContentColor,
                         room = room,
-                        isPlaying = isPlaying,
-                        onTogglePlay = { viewModel.togglePlayPause() },
-                        onStop = { viewModel.stopBilibiliRoom(); isExpanded = false },
                         isOnLeft = true
                     )
                     ArrowButton(
@@ -208,9 +205,6 @@ fun FloatingRadioBubble(
                         expandedContainerColor = expandedContainerColor,
                         expandedContentColor = buttonContentColor,
                         room = room,
-                        isPlaying = isPlaying,
-                        onTogglePlay = { viewModel.togglePlayPause() },
-                        onStop = { viewModel.stopBilibiliRoom(); isExpanded = false },
                         isOnLeft = false
                     )
                 }
@@ -367,9 +361,6 @@ private fun ExpandedRadioContent(
     expandedContainerColor: Color,
     expandedContentColor: Color,
     room: BilibiliApi.LiveRoom,
-    isPlaying: Boolean,
-    onTogglePlay: () -> Unit,
-    onStop: () -> Unit,
     isOnLeft: Boolean
 ) {
     Box(
@@ -386,13 +377,15 @@ private fun ExpandedRadioContent(
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp)
         ) {
             Text(
                 text = room.title,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
-                maxLines = 1,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 color = expandedContentColor,
                 fontSize = 13.sp
@@ -406,36 +399,6 @@ private fun ExpandedRadioContent(
                 color = expandedContentColor.copy(alpha = 0.7f),
                 fontSize = 11.sp
             )
-            Spacer(modifier = Modifier.weight(1f))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = onTogglePlay,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = null,
-                        tint = expandedContentColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(4.dp))
-                IconButton(
-                    onClick = onStop,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = null,
-                        tint = expandedContentColor.copy(alpha = 0.6f),
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
         }
     }
 }
