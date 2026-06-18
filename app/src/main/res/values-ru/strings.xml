@@ -124,8 +124,8 @@
     <string name="current_countdown">Текущий таймер: %1$s</string>
     <string name="please_play_sound_before_timer">Пожалуйста, включите звук перед установкой таймера</string>
     <string name="quick_select">Быстрый выбор</string>
-    <string name="tab_builtin">Встроенные</string>
-    <string name="tab_favorite">Избранное</string>
+    <string name="tab_builtin">Встроен</string>
+    <string name="tab_favorite">Избр</string>
     <string name="go_back">Назад</string>
     <string name="tab_online">Онлайн</string>
     <string name="no_online_content">Нет онлайн-контента</string>
@@ -504,10 +504,11 @@
     <string name="got_it">Понятно</string>
     
     <!-- Bottom Navigation Tabs -->
-    <string name="tab_white_noise">Шум</string>
+    <string name="tab_white_noise">XM</string>
     <string name="tab_starsky">Звёзды</string>
-    <string name="tab_breathing">Дыхание</string>
-    <string name="tab_settings">Настройки</string>
+    <string name="tab_breathing">Дыхан</string>
+    <string name="tab_radio">Радио</string>
+    <string name="tab_settings">Настр</string>
     
     <!-- Tomato Timer -->
     <string name="tomato_timer_title">Таймер фокуса</string>
@@ -613,7 +614,31 @@
     <string name="diary_stat_duration">Время</string>
     <string name="diary_stat_favorite">Любимый</string>
 
+    <string name="tag_healing">Исцеление</string>
+    <string name="tag_stress_relief">Снятие стресса</string>
+
     <!-- Письмо разработчика -->
     <string name="developer_letter_title">Письмо от разработчика</string>
     <string name="developer_letter_content">Дорогой друг,\n\nЕсли ты нашёл это письмо, я надеюсь, ты чувствуешь тепло, которое я спрятал в коде.\n\nXMSLEEP никогда не был просто техническим проектом. Это маленькое убежище, которое я создавал для тебя бессчётными ночами, слушая звуки дождя, костра и клавиатуры.\n\nЖизнь бывает шумной. Работа — занятой. Эмоции — тяжёлыми. Если эти звуки смогут подарить тебе мгновение покоя — хотя бы несколько секунд — то всё это было не зря.\n\nСпасибо, что используешь XMSLEEP. Спасибо, что придаёшь этому маленькому миру смысл.\n\nЖелаю тебе спокойной ночи.\n\n—— Tosencen</string>
+    <string name="radio_station_noise">Радиошум</string>
+    <string name="search_room_hint">Поиск комнаты...</string>
+    <string name="tag_white_noise">Белый шум</string>
+    <string name="tag_study_room">Занятия</string>
+    <string name="tag_lofi">Лёгкая музыка</string>
+    <string name="refresh">Обновить</string>
+    <string name="recommended">Рекомендуемые</string>
+    <string name="more_live">Больше эфиров</string>
+    <string name="no_live">Нет прямых эфиров</string>
+    <string name="show_radio_tab">Вкладка радио</string>
+    <string name="show_radio_tab_description">Показывать вкладку радио в нижней панели навигации</string>
+    <string name="show_breathing_tab">Вкладка дыхания</string>
+    <string name="show_breathing_tab_description">Показывать вкладку дыхания в нижней панели навигации</string>
+    <string name="search_result">Результаты поиска «%s»</string>
+    
+    
+    
+    
+    
+    
+
 </resources>

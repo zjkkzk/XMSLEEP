@@ -497,9 +497,10 @@
     <string name="got_it">알겠어요</string>
 
     <!-- Bottom Navigation Tabs -->
-    <string name="tab_white_noise">소음</string>
+    <string name="tab_white_noise">XM</string>
     <string name="tab_starsky">별</string>
     <string name="tab_breathing">호흡</string>
+    <string name="tab_radio">라디오</string>
     <string name="tab_settings">설정</string>
 
     <!-- Tomato Timer -->
@@ -606,7 +607,31 @@
     <string name="diary_stat_duration">시간</string>
     <string name="diary_stat_favorite">즐겨찾기</string>
 
+    <string name="tag_healing">힐링</string>
+    <string name="tag_stress_relief">스트레스 해소</string>
+
     <!-- 개발자 편지 -->
     <string name="developer_letter_title">개발자가 보내는 편지</string>
     <string name="developer_letter_content">친애하는 친구에게,\n\n이 편지를 발견했다면, 제가 코드 속에 숨겨둔 마음이 전해졌기를 바랍니다.\n\nXMSLEEP는 단순한 기술 프로젝트가 아니었습니다. 빗소리, 모닥불, 키보드 소리를 들으며 보낸 수많은 밤, 당신을 위해 만들어낸 작은 안식처였습니다.\n\n삶은 때로 시끄럽고, 일은 바쁘고, 감정은 무거울 수 있습니다. 이 소리들이 당신에게 단 한 순간이라도 평화를 가져다줄 수 있다면, 그 모든 것이 가치 있었습니다.\n\nXMSLEEP를 사용해 주셔서 감사합니다. 이 작은 세상에 의미를 주셔서 감사합니다.\n\n오늘 밤 좋은 꿈 꾸세요.\n\n—— Tosencen</string>
+    <string name="radio_station_noise">라디오 소음</string>
+    <string name="search_room_hint">방 검색...</string>
+    <string name="tag_white_noise">백색소음</string>
+    <string name="tag_study_room">스터디룸</string>
+    <string name="tag_lofi">경음악</string>
+    <string name="refresh">새로고침</string>
+    <string name="recommended">추천</string>
+    <string name="more_live">더 많은 라이브</string>
+    <string name="no_live">현재 라이브 방송이 없습니다</string>
+    <string name="show_radio_tab">라디오 탭</string>
+    <string name="show_radio_tab_description">하단 탐색 표시줄에 라디오 탭 표시</string>
+    <string name="show_breathing_tab">호흡 탭</string>
+    <string name="show_breathing_tab_description">하단 탐색 표시줄에 호흡 탭 표시</string>
+    <string name="search_result">%s 검색 결과</string>
+    
+    
+    
+    
+    
+    
+
 </resources>

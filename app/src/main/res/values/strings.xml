@@ -64,7 +64,7 @@
 
 • 版权声明：本应用仅提供音频播放功能，不拥有任何音频内容的版权。所有音频内容仅供个人学习和娱乐使用，请勿用于商业用途。如您发现任何音频内容侵犯了您的版权，请联系我们，我们将及时处理。</string>
     <string name="technical_info_title">技术信息</string>
-    <string name="copyright">© XMSLEEP. All rights reserved.\n\n本应用提供的音频内容仅供个人学习和娱乐使用。\n请尊重相关音频资源的版权，不得用于商业用途。</string>
+    <string name="copyright">© XMSLEEP。保留所有权利。\n\n本应用提供的音频内容仅供个人学习和娱乐使用。\n请尊重相关音频资源的版权，不得用于商业用途。</string>
     <string name="hide_animation">隐藏WebP动画</string>
     <string name="hide_lottie_animation_in_sound_cards">隐藏声音卡片中的WebP动画</string>
     <string name="background_settings">背景设置</string>
@@ -545,10 +545,25 @@
     <string name="tutorial">教程</string>
     
     <!-- 底部导航 Tab -->
-    <string name="tab_white_noise">白噪音</string>
+    <string name="tab_white_noise">晓满</string>
     <string name="tab_starsky">繁星</string>
     <string name="tab_breathing">呼吸</string>
+    <string name="tab_radio">电台</string>
+    <string name="radio_select_station">选择电台</string>
     <string name="tab_settings">设置</string>
+    <string name="search_room_hint">搜索内容...</string>
+    <string name="tag_white_noise">白噪音</string>
+    <string name="tag_study_room">自习室</string>
+    <string name="tag_lofi">轻音乐</string>
+    <string name="refresh">刷新</string>
+    <string name="recommended">白噪音置顶</string>
+    <string name="more_live">更多直播</string>
+    <string name="no_live">暂无直播</string>
+    <string name="search_result">"%s" 的搜索结果</string>
+    <string name="show_radio_tab">电台 Tab</string>
+    <string name="show_radio_tab_description">在底部导航栏显示电台标签</string>
+    <string name="show_breathing_tab">呼吸 Tab</string>
+    <string name="show_breathing_tab_description">在底部导航栏显示呼吸标签</string>
     
     <!-- 番茄计时器 -->
     <string name="tomato_timer_title">番茄时钟</string>
@@ -634,6 +649,18 @@
     <string name="diary_stat_favorite">最爱</string>
 
     <!-- 开发者来信 -->
+    <string name="tag_healing">疗愈</string>
+    <string name="tag_stress_relief">解压</string>
+
+    <!-- 开发者来信 -->
     <string name="developer_letter_title">来自开发者的信</string>
     <string name="developer_letter_content">亲爱的朋友：\n\n当你发现这封信时，希望你能感受到我藏在代码里的一点心意。\n\nXMSLEEP 从一开始就不只是一个技术项目。它是我在无数个深夜，听着雨声、篝火声、键盘声时，想要为你建造的一个小小的避风港。\n\n生活有时候很吵，工作很忙，情绪也会低落。如果这些声音能让你在某个瞬间感到平静，哪怕只是几秒钟，那这一切就是值得的。\n\n谢谢你使用 XMSLEEP，谢谢你让这个小小的世界有了意义。\n\n愿你今夜好眠。\n\n—— Tosencen</string>
+    <string name="radio_station_noise">电台噪音</string>
+    
+    
+    
+    
+    
+    
+
 </resources>

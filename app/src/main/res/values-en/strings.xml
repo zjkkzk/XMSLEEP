@@ -504,10 +504,25 @@ If you have any questions, please contact us through the in-app contact method.<
     <string name="got_it">Got it</string>
     
     <!-- Bottom Navigation Tabs -->
-    <string name="tab_white_noise">Noise</string>
+    <string name="tab_white_noise">XM</string>
     <string name="tab_starsky">Stars</string>
-    <string name="tab_breathing">Breathe</string>
-    <string name="tab_settings">Settings</string>
+    <string name="tab_breathing">Breath</string>
+    <string name="tab_radio">Radio</string>
+    <string name="radio_select_station">Select Station</string>
+    <string name="tab_settings">Setup</string>
+    <string name="search_room_hint">Search rooms...</string>
+    <string name="tag_white_noise">White Noise</string>
+    <string name="tag_study_room">Study Room</string>
+    <string name="tag_lofi">Lo-fi</string>
+    <string name="refresh">Refresh</string>
+    <string name="recommended">Recommended</string>
+    <string name="more_live">More Live</string>
+    <string name="no_live">No live rooms</string>
+    <string name="show_radio_tab">Radio Tab</string>
+    <string name="show_radio_tab_description">Show radio tab in the bottom navigation bar</string>
+    <string name="show_breathing_tab">Breathing Tab</string>
+    <string name="show_breathing_tab_description">Show breathing tab in the bottom navigation bar</string>
+    <string name="search_result">Search results for "%s"</string>
     
     <!-- Tomato Timer -->
     <string name="tomato_timer_title">Focus Timer</string>
@@ -613,7 +628,11 @@ If you have any questions, please contact us through the in-app contact method.<
     <string name="diary_stat_duration">Duration</string>
     <string name="diary_stat_favorite">Favorite</string>
 
+    <string name="tag_healing">Healing</string>
+    <string name="tag_stress_relief">Stress Relief</string>
+
     <!-- Developer's Letter -->
     <string name="developer_letter_title">A Letter from the Developer</string>
     <string name="developer_letter_content">Dear friend,\n\nIf you\'ve found this letter, I hope you can feel the warmth I\'ve hidden in the code.\n\nXMSLEEP was never just a technical project. It was a little sanctuary I built for you during countless late nights, listening to rain, campfires, and the sound of keyboards.\n\nLife can be noisy. Work can be busy. Emotions can feel heavy. If these sounds can bring you even a moment of peace — just a few seconds — then all of this has been worth it.\n\nThank you for using XMSLEEP. Thank you for giving this little world meaning.\n\nWishing you a peaceful night.\n\n—— Tosencen</string>
+    <string name="radio_station_noise">Radio Noise</string>
 </resources>

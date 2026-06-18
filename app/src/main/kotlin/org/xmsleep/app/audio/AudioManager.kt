@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.media3.common.util.UnstableApi
 import org.xmsleep.app.utils.Logger
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.CoroutineScope
@@ -68,12 +70,48 @@ class AudioManager private constructor() {
     // 播放顺序队列，用于限制最多同时播放的声音数量
     private val playingQueue = ConcurrentLinkedQueue<PlayingItem>()
 
-    // 响应式状态：是否有任何声音正在播放（本地+远程）
+    // 响应式状态：电台播放
+    private val _radioPlaying = MutableStateFlow(false)
+    val radioPlaying: StateFlow<Boolean> = _radioPlaying.asStateFlow()
+
+    // 电台停止请求回调（由 RadioViewModel 注册）
+    private var onStopRadioRequested: (() -> Unit)? = null
+
+    fun setOnStopRadioRequested(callback: (() -> Unit)?) {
+        onStopRadioRequested = callback
+    }
+
+    // 电台恢复请求回调（由 RadioViewModel 注册）
+    private var onRadioResumeRequested: (() -> Unit)? = null
+    // 电台是否在暂停前正在播放（跨 MusicService 销毁持久化）
+    private var _wasRadioPlaying = false
+
+    fun setOnRadioResumeRequested(callback: (() -> Unit)?) {
+        onRadioResumeRequested = callback
+    }
+
+    fun setRadioWasPlaying(wasPlaying: Boolean) {
+        _wasRadioPlaying = wasPlaying
+    }
+
+    fun isRadioWasPlaying(): Boolean = _wasRadioPlaying
+
+    fun resumeRadio() {
+        onRadioResumeRequested?.invoke()
+    }
+
+    fun setRadioPlaying(isPlaying: Boolean) {
+        _radioPlaying.value = isPlaying
+        notifyServicePlayingStateChanged()
+    }
+
+    // 响应式状态：是否有任何声音正在播放（本地+远程+电台）
     val hasAnyPlayingSounds: StateFlow<Boolean> = combine(
         localSoundPlayer.hasAnyPlaying,
-        remoteSoundPlayer.hasAnyPlaying
-    ) { localPlaying, remotePlaying ->
-        localPlaying || remotePlaying
+        remoteSoundPlayer.hasAnyPlaying,
+        _radioPlaying
+    ) { localPlaying, remotePlaying, radioPlaying ->
+        localPlaying || remotePlaying || radioPlaying
     }.stateIn(
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
         started = kotlinx.coroutines.flow.SharingStarted.Eagerly,
@@ -231,6 +269,7 @@ class AudioManager private constructor() {
 
             localSoundPlayer.pauseAllSounds()
             remoteSoundPlayer.pauseAllRemoteSounds()
+            onStopRadioRequested?.invoke()
 
             playingQueue.clear()
             notifyServicePlayingStateChanged()
@@ -251,6 +290,7 @@ class AudioManager private constructor() {
 
             localSoundPlayer.stopAllSounds()
             remoteSoundPlayer.pauseAllRemoteSounds()
+            onStopRadioRequested?.invoke()
 
             playingQueue.clear()
             notifyServicePlayingStateChanged()
@@ -349,7 +389,7 @@ class AudioManager private constructor() {
      * 检查是否有任何声音正在播放
      */
     fun hasAnyPlayingSounds(): Boolean {
-        return localSoundPlayer.hasAnyPlayingSounds() || remoteSoundPlayer.hasAnyPlayingSounds()
+        return localSoundPlayer.hasAnyPlayingSounds() || remoteSoundPlayer.hasAnyPlayingSounds() || _radioPlaying.value
     }
 
     /**
@@ -380,10 +420,16 @@ class AudioManager private constructor() {
         val isPlaying = hasAnyPlayingSounds()
         val localCount = localSoundPlayer.getPlayingSounds().size
         val remoteCount = remoteSoundPlayer.getPlayingRemoteSoundIds().size
-        val totalCount = localCount + remoteCount
+        val radioCount = if (_radioPlaying.value) 1 else 0
+        val totalCount = localCount + remoteCount + radioCount
         val descriptions = getActiveSoundDescriptions()
+        val allDescriptions = if (_radioPlaying.value) {
+            descriptions + "电台噪音"
+        } else {
+            descriptions
+        }
 
-        musicServiceManager.notifyServicePlayingStateChanged(isPlaying, totalCount, descriptions)
+        musicServiceManager.notifyServicePlayingStateChanged(isPlaying, totalCount, allDescriptions)
     }
 
     // =========================================================================

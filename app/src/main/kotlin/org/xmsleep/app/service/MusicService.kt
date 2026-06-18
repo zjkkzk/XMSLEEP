@@ -210,6 +210,7 @@ class MusicService : Service() {
         if (isPlaying) {
             // 当前正在播放，执行暂停
             // 关键：在调用 pauseAllSounds() 之前先保存播放列表
+            audioManager.setRadioWasPlaying(audioManager.radioPlaying.value)
             lastPlayingLocalSounds.clear()
             lastPlayingLocalSounds.addAll(audioManager.getPlayingSounds())
             
@@ -231,13 +232,19 @@ class MusicService : Service() {
             isPlaying = false
         } else {
             // 当前已暂停，恢复上次播放的音频
-            if (lastPlayingLocalSounds.isEmpty() && lastPlayingRemoteSoundIds.isEmpty()) {
+            if (lastPlayingLocalSounds.isEmpty() && lastPlayingRemoteSoundIds.isEmpty() && !audioManager.isRadioWasPlaying()) {
                 // 没有可恢复的音频，关闭服务
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return
             }
-            
+
+            // 恢复电台
+            if (audioManager.isRadioWasPlaying()) {
+                audioManager.setRadioWasPlaying(false)
+                audioManager.resumeRadio()
+            }
+
             // 关键修复：设置恢复标志，防止恢复过程中重新保存播放列表
             isRestoring = true
             

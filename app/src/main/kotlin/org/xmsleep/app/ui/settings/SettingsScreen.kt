@@ -731,6 +731,68 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        HorizontalDivider()
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        var showRadioTab by remember {
+                            mutableStateOf(PreferencesManager.getShowRadioTab(context))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = context.getString(R.string.show_radio_tab),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = context.getString(R.string.show_radio_tab_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = showRadioTab,
+                                onCheckedChange = { enabled ->
+                                    showRadioTab = enabled
+                                    PreferencesManager.setShowRadioTab(context, enabled)
+                                }
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        var showBreathingTab by remember {
+                            mutableStateOf(PreferencesManager.getShowBreathingTab(context))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = context.getString(R.string.show_breathing_tab),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    text = context.getString(R.string.show_breathing_tab_description),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = showBreathingTab,
+                                onCheckedChange = { enabled ->
+                                    showBreathingTab = enabled
+                                    PreferencesManager.setShowBreathingTab(context, enabled)
+                                }
+                            )
+                        }
                     }
                 },
                 confirmButton = {

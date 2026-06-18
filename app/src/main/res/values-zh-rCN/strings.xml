@@ -106,7 +106,30 @@
     <string name="cancel_default">取消预设</string>
     <string name="pinned_success">已添加预设</string>
     <string name="unpinned_success">已取消预设</string>
+    <string name="tag_healing">疗愈</string>
+    <string name="tag_stress_relief">解压</string>
     <string name="join_qq">加入QQ群</string>
     <string name="join_qq_description">加入QQ群交流反馈</string>
+    <string name="radio_station_noise">电台噪音</string>
+    <string name="search_room_hint">搜索内容...</string>
+    <string name="tag_white_noise">白噪音</string>
+    <string name="tag_study_room">自习室</string>
+    <string name="tag_lofi">轻音乐</string>
+    <string name="refresh">刷新</string>
+    <string name="recommended">白噪音置顶</string>
+    <string name="more_live">更多直播</string>
+    <string name="no_live">暂无直播</string>
+    <string name="show_radio_tab">电台 Tab</string>
+    <string name="show_radio_tab_description">在底部导航栏显示电台标签</string>
+    <string name="show_breathing_tab">呼吸 Tab</string>
+    <string name="show_breathing_tab_description">在底部导航栏显示呼吸标签</string>
+    <string name="search_result">%s 的搜索结果</string>
+    
+    
+    
+    
+    
+    
+
 </resources>
 

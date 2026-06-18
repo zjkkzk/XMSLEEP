@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -128,6 +129,67 @@ fun MainScreen(
     // 最近播放弹窗显示设置
     var showRecentPlayDialogSetting by remember { 
         mutableStateOf(org.xmsleep.app.preferences.PreferencesManager.getShowRecentPlayDialog(context))
+    }
+    
+    var showRadioTab by remember {
+        val prefs = context.getSharedPreferences(
+            org.xmsleep.app.Constants.PrefsKeys.PREFS_NAME,
+            android.content.Context.MODE_PRIVATE
+        )
+        mutableStateOf(prefs.getBoolean(org.xmsleep.app.Constants.PrefsKeys.SHOW_RADIO_TAB, true))
+    }
+    // 监听电台Tab显隐偏好变化
+    val radioTabPrefListener = remember {
+        android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            if (key == org.xmsleep.app.Constants.PrefsKeys.SHOW_RADIO_TAB) {
+                showRadioTab = prefs.getBoolean(key, true)
+            }
+        }
+    }
+    DisposableEffect(Unit) {
+        val prefs = context.getSharedPreferences(
+            org.xmsleep.app.Constants.PrefsKeys.PREFS_NAME,
+            android.content.Context.MODE_PRIVATE
+        )
+        prefs.registerOnSharedPreferenceChangeListener(radioTabPrefListener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(radioTabPrefListener) }
+    }
+    
+    // 当电台 Tab 隐藏时，如果当前在电台页面则切换到默认 Tab
+    LaunchedEffect(showRadioTab) {
+        if (!showRadioTab && selectedItem == 5) {
+            selectedItem = 1
+        }
+    }
+
+    var showBreathingTab by remember {
+        val prefs = context.getSharedPreferences(
+            org.xmsleep.app.Constants.PrefsKeys.PREFS_NAME,
+            android.content.Context.MODE_PRIVATE
+        )
+        mutableStateOf(prefs.getBoolean(org.xmsleep.app.Constants.PrefsKeys.SHOW_BREATHING_TAB, true))
+    }
+    val breathingTabPrefListener = remember {
+        android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            if (key == org.xmsleep.app.Constants.PrefsKeys.SHOW_BREATHING_TAB) {
+                showBreathingTab = prefs.getBoolean(key, true)
+            }
+        }
+    }
+    DisposableEffect(Unit) {
+        val prefs = context.getSharedPreferences(
+            org.xmsleep.app.Constants.PrefsKeys.PREFS_NAME,
+            android.content.Context.MODE_PRIVATE
+        )
+        prefs.registerOnSharedPreferenceChangeListener(breathingTabPrefListener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(breathingTabPrefListener) }
+    }
+
+    // 当呼吸 Tab 隐藏时，如果当前在呼吸页面则切换到默认 Tab
+    LaunchedEffect(showBreathingTab) {
+        if (!showBreathingTab && selectedItem == 4) {
+            selectedItem = 1
+        }
     }
     
     // 本地音频权限相关
@@ -475,7 +537,8 @@ fun MainScreen(
                                         accumulatedDrag > threshold -> {
                                             when (selectedItem) {
                                                 2 -> selectedItem = 1  // 从繁星到白噪音
-                                                4 -> selectedItem = 2  // 从呼吸到繁星
+                                                5 -> selectedItem = 2  // 从电台到繁星
+                                                4 -> selectedItem = 5  // 从呼吸到电台
                                                 3 -> selectedItem = 4  // 从设置到呼吸
                                             }
                                         }
@@ -483,7 +546,8 @@ fun MainScreen(
                                         accumulatedDrag < -threshold -> {
                                             when (selectedItem) {
                                                 1 -> selectedItem = 2  // 从白噪音到繁星
-                                                2 -> selectedItem = 4  // 从繁星到呼吸
+                                                2 -> selectedItem = 5  // 从繁星到电台
+                                                5 -> selectedItem = 4  // 从电台到呼吸
                                                 4 -> selectedItem = 3  // 从呼吸到设置
                                             }
                                         }
@@ -495,15 +559,10 @@ fun MainScreen(
                             }
                         },
                     transitionSpec = {
-                        // 改进的过渡动画：使用滑动和淡入淡出效果
-                        // 切换到设置页 (tab 3) 时从右往左，其他情况保持原有逻辑
-                        val direction = if (targetState == 3 && initialState != 3) {
-                            1 // 切换到设置页时，新页面从右边进入
-                        } else if (initialState == 3 && targetState != 3) {
-                            -1 // 从设置页切出时，旧页面向右退出
-                        } else {
-                            if (targetState > initialState) 1 else -1
-                        }
+                        val tabOrder = mapOf(1 to 0, 2 to 1, 5 to 2, 4 to 3, 3 to 4)
+                        val fromPos = tabOrder[initialState] ?: 0
+                        val toPos = tabOrder[targetState] ?: 0
+                        val direction = if (toPos > fromPos) 1 else -1
                         slideInHorizontally(
                             initialOffsetX = { fullWidth -> fullWidth * direction },
                             animationSpec = tween(300, easing = FastOutSlowInEasing)
@@ -594,6 +653,14 @@ fun MainScreen(
                                         showPermissionDialog = true
                                     }
                                 }
+                            )
+                        }
+                        5 -> {
+                            // 电台页面
+                            org.xmsleep.app.ui.radio.RadioScreen(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingValues)
                             )
                         }
                         4 -> {
@@ -768,7 +835,8 @@ fun MainScreen(
                             onClick = { selectedItem = 1 },
                             onLongClick = { showDeveloperLetter = true },
                             icon = Icons.Default.LocalFlorist,
-                            label = context.getString(R.string.tab_white_noise)
+                            label = context.getString(R.string.tab_white_noise),
+                            modifier = Modifier.weight(1f)
                         )
                         
                         // 繁星 Tab
@@ -776,23 +844,39 @@ fun MainScreen(
                             selected = selectedItem == 2,
                             onClick = { selectedItem = 2 },
                             icon = Icons.Default.Satellite,
-                            label = context.getString(R.string.tab_starsky) // 显示文字
+                            label = context.getString(R.string.tab_starsky),
+                            modifier = Modifier.weight(1f)
                         )
                         
+                        // 电台 Tab
+                        if (showRadioTab) {
+                        NavigationBarItem(
+                            selected = selectedItem == 5,
+                            onClick = { selectedItem = 5 },
+                            icon = Icons.Default.Radio,
+                            label = context.getString(R.string.tab_radio),
+                            modifier = Modifier.weight(1f)
+                        )
+                        }
+                        
                         // 呼吸 Tab
+                        if (showBreathingTab) {
                         NavigationBarItem(
                             selected = selectedItem == 4,
                             onClick = { selectedItem = 4 },
                             icon = Icons.Default.SelfImprovement,
-                            label = context.getString(R.string.tab_breathing) // 显示文字
+                            label = context.getString(R.string.tab_breathing),
+                            modifier = Modifier.weight(1f)
                         )
+                        }
                         
                         // 设置 Tab
                         NavigationBarItem(
                             selected = selectedItem == 3,
                             onClick = { selectedItem = 3 },
                             icon = Icons.Default.Settings,
-                            label = context.getString(R.string.tab_settings) // 显示文字
+                            label = context.getString(R.string.tab_settings),
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -1055,7 +1139,9 @@ private fun NavigationBarItem(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = iconColor
+                color = iconColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

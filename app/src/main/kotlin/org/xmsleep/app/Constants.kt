@@ -106,6 +106,17 @@ object Constants {
         const val AUTO_PLAY_ON_START = "auto_play_on_start"
         // 一言一句小组件相关
         const val QUOTE_WIDGET_ADDED = "quote_widget_added"
+
+        // 电台相关
+        const val RADIO_STATION_ID = "radio_station_id"
+        const val RADIO_VOLUME = "radio_volume"
+        const val RADIO_LOTTIE_FILE = "radio_lottie_file"
+        const val BILIBILI_PINNED_ROOMS = "bilibili_pinned_rooms"
+        const val BILIBILI_PINNED_ROOMS_INFO = "bilibili_pinned_rooms_info"
+        const val RADIO_FLOATING_BUTTON_Y = "radio_floating_button_y"
+        const val RADIO_FLOATING_BUTTON_IS_LEFT = "radio_floating_button_is_left"
+        const val SHOW_RADIO_TAB = "show_radio_tab"
+        const val SHOW_BREATHING_TAB = "show_breathing_tab"
         
         const val LANGUAGE_PREFS_NAME = "language_prefs"
         const val KEY_LANGUAGE = "language"

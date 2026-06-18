@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Base64
 import androidx.compose.ui.graphics.Color
 import org.xmsleep.app.Constants
+import org.xmsleep.app.audio.BilibiliApi
 import org.xmsleep.app.theme.DarkModeOption
 import org.xmsleep.app.utils.Logger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +51,7 @@ object PreferencesManager {
     private val KEY_KEEP_SCREEN_ON = Constants.PrefsKeys.KEEP_SCREEN_ON
     private val KEY_SHOW_RECENT_PLAY_DIALOG = Constants.PrefsKeys.SHOW_RECENT_PLAY_DIALOG
     private val KEY_AUTO_PLAY_ON_START = Constants.PrefsKeys.AUTO_PLAY_ON_START
+    private val KEY_SHOW_RADIO_TAB = Constants.PrefsKeys.SHOW_RADIO_TAB
     private val KEY_QUOTE_WIDGET_ADDED = Constants.PrefsKeys.QUOTE_WIDGET_ADDED
 
     // 响应式状态：预设远程固定列表
@@ -683,6 +685,28 @@ object PreferencesManager {
         return prefs.getBoolean(KEY_AUTO_PLAY_ON_START, false)
     }
 
+    fun setShowRadioTab(context: Context, show: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_SHOW_RADIO_TAB, show).apply()
+    }
+
+    fun getShowRadioTab(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_SHOW_RADIO_TAB, true)
+    }
+
+    private val KEY_SHOW_BREATHING_TAB = Constants.PrefsKeys.SHOW_BREATHING_TAB
+
+    fun setShowBreathingTab(context: Context, show: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(KEY_SHOW_BREATHING_TAB, show).apply()
+    }
+
+    fun getShowBreathingTab(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(KEY_SHOW_BREATHING_TAB, true)
+    }
+
     /**
      * 保存一言一句小组件是否已添加
      * @param added 是否已添加
@@ -699,6 +723,113 @@ object PreferencesManager {
     fun isQuoteWidgetAdded(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getBoolean(KEY_QUOTE_WIDGET_ADDED, false)
+    }
+
+    // =========================================================================
+    // 电台
+    // =========================================================================
+
+    /**
+     * 保存电台ID
+     */
+    fun saveRadioStationId(context: Context, stationId: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(Constants.PrefsKeys.RADIO_STATION_ID, stationId).apply()
+    }
+
+    /**
+     * 获取上次播放的电台ID
+     */
+    fun getRadioStationId(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(Constants.PrefsKeys.RADIO_STATION_ID, null)
+    }
+
+    /**
+     * 保存电台音量
+     */
+    fun saveRadioVolume(context: Context, volume: Float) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putFloat(Constants.PrefsKeys.RADIO_VOLUME, volume).apply()
+    }
+
+    /**
+     * 获取电台音量
+     */
+    fun getRadioVolume(context: Context): Float {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getFloat(Constants.PrefsKeys.RADIO_VOLUME, 0.5f)
+    }
+
+    fun saveLottieAnimation(context: Context, fileName: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(Constants.PrefsKeys.RADIO_LOTTIE_FILE, fileName).apply()
+    }
+
+    fun getLottieAnimation(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(Constants.PrefsKeys.RADIO_LOTTIE_FILE, "dq.lottie") ?: "dq.lottie"
+    }
+
+    fun saveBilibiliPinnedRooms(context: Context, roomIds: Set<String>) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putStringSet(Constants.PrefsKeys.BILIBILI_PINNED_ROOMS, roomIds).apply()
+    }
+
+    fun getBilibiliPinnedRooms(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getStringSet(Constants.PrefsKeys.BILIBILI_PINNED_ROOMS, setOf("25248835", "31868497")) ?: setOf("25248835", "31868497")
+    }
+
+    fun saveBilibiliPinnedRoomsInfo(context: Context, rooms: List<BilibiliApi.LiveRoom>) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val jsonArray = org.json.JSONArray()
+        for (room in rooms) {
+            val obj = org.json.JSONObject()
+            obj.put("roomId", room.roomId)
+            obj.put("title", room.title)
+            obj.put("userName", room.userName)
+            obj.put("online", room.online)
+            obj.put("cateName", room.cateName)
+            jsonArray.put(obj)
+        }
+        prefs.edit().putString(Constants.PrefsKeys.BILIBILI_PINNED_ROOMS_INFO, jsonArray.toString()).apply()
+    }
+
+    fun getBilibiliPinnedRoomsInfo(context: Context): List<BilibiliApi.LiveRoom> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val json = prefs.getString(Constants.PrefsKeys.BILIBILI_PINNED_ROOMS_INFO, null) ?: return emptyList()
+        val jsonArray = org.json.JSONArray(json)
+        val rooms = mutableListOf<BilibiliApi.LiveRoom>()
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getJSONObject(i)
+            rooms.add(BilibiliApi.LiveRoom(
+                roomId = obj.getString("roomId"),
+                title = obj.getString("title"),
+                userName = obj.getString("userName"),
+                online = obj.getInt("online"),
+                cateName = obj.optString("cateName", "")
+            ))
+        }
+        return rooms
+    }
+
+    fun saveRadioFloatingButtonPosition(context: Context, y: Float, isLeft: Boolean) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putFloat(Constants.PrefsKeys.RADIO_FLOATING_BUTTON_Y, y)
+            .putBoolean(Constants.PrefsKeys.RADIO_FLOATING_BUTTON_IS_LEFT, isLeft)
+            .apply()
+    }
+
+    fun getRadioFloatingButtonY(context: Context): Float {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getFloat(Constants.PrefsKeys.RADIO_FLOATING_BUTTON_Y, -1f)
+    }
+
+    fun getRadioFloatingButtonIsLeft(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(Constants.PrefsKeys.RADIO_FLOATING_BUTTON_IS_LEFT, true)
     }
 }
 

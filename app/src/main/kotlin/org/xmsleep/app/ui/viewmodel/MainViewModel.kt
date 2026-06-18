@@ -109,11 +109,7 @@ class MainViewModel @Inject constructor(
                 _hasPlayingSounds.value = hasPlaying
                 
                 if (hasPlaying) {
-                    // 有音频播放，启动服务
                     audioManager.startMusicService(context)
-                } else {
-                    // 没有音频播放，停止服务
-                    audioManager.stopMusicService(context)
                 }
             }
         }

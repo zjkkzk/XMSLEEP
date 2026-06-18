@@ -595,7 +595,31 @@
     <string name="diary_stat_duration">時長</string>
     <string name="diary_stat_favorite">最愛</string>
 
+    <string name="tag_healing">療癒</string>
+    <string name="tag_stress_relief">解壓</string>
+
     <!-- 開發者來信 -->
     <string name="developer_letter_title">來自開發者的信</string>
     <string name="developer_letter_content">親愛的朋友：\n\n當你發現這封信時，希望你能感受到我藏在程式碼裡的一點心意。\n\nXMSLEEP 從一開始就不只是一個技術專案。它是我在無數個深夜，聽著雨聲、營火聲、鍵盤聲時，想要為你建造的一個小小的避風港。\n\n生活有時候很吵，工作很忙，情緒也會低落。如果這些聲音能讓你在某個瞬間感到平靜，哪怕只是幾秒鐘，那這一切都是值得的。\n\n謝謝你使用 XMSLEEP，謝謝你讓這個小小的世界有了意義。\n\n願你今夜好眠。\n\n—— Tosencen</string>
+    <string name="radio_station_noise">電台噪音</string>
+    <string name="search_room_hint">搜尋內容...</string>
+    <string name="tag_white_noise">白噪音</string>
+    <string name="tag_study_room">自習室</string>
+    <string name="tag_lofi">輕音樂</string>
+    <string name="refresh">重新整理</string>
+    <string name="recommended">白噪音置頂</string>
+    <string name="more_live">更多直播</string>
+    <string name="no_live">暫無直播</string>
+    <string name="show_radio_tab">電台 Tab</string>
+    <string name="show_radio_tab_description">在底部導航欄顯示電台標籤</string>
+    <string name="show_breathing_tab">呼吸 Tab</string>
+    <string name="show_breathing_tab_description">在底部導航欄顯示呼吸標籤</string>
+    <string name="search_result">%s 的搜尋結果</string>
+    
+    
+    
+    
+    
+    
+
 </resources>

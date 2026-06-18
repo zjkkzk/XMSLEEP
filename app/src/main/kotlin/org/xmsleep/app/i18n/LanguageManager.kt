@@ -45,6 +45,8 @@ object LanguageManager {
     
     /**
      * 保存语言设置
+     * 注意：不调用 LocaleManager.setApplicationLocales（会导致 Activity 重建黑屏），
+     * 而是在 Compose 层通过 CompositionLocalProvider 实时切换，无需重建 Activity。
      */
     fun setLanguage(context: Context, language: Language) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -82,14 +84,14 @@ object LanguageManager {
     
     /**
      * 创建语言化的Context（用于实时更新语言）
-     * 使用 Application Context 的配置作为基础，避免嵌套 ConfigurationContext 带来的资源缓存问题
+     * 基于 Application Context 创建 ConfigurationContext，避免嵌套 Activity 的 ConfigurationContext 导致 locale 丢失
      */
     fun createLocalizedContext(context: Context, language: Language): Context {
         val appConfig = Configuration(context.applicationContext.resources.configuration)
         appConfig.setLocale(language.locale)
         
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            context.createConfigurationContext(appConfig)
+            context.applicationContext.createConfigurationContext(appConfig)
         } else {
             @Suppress("DEPRECATION")
             context.resources.updateConfiguration(appConfig, context.resources.displayMetrics)
@@ -98,15 +100,15 @@ object LanguageManager {
     }
     
     /**
-     * 更新应用语言
+     * 更新应用语言（用于 attachBaseContext）
      */
     fun updateAppLanguage(context: Context): Context {
         val language = getCurrentLanguage(context)
         val locale = language.locale
-        
+
         val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
-        
+
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             context.createConfigurationContext(config)
         } else {

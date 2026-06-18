@@ -16,8 +16,8 @@ android {
         applicationId = "org.xmsleep.app"
         minSdk = 26
         targetSdk = 35
-		versionCode = 39
-		versionName = "2.2.4"
+		versionCode = 40
+		versionName = "2.2.5"
         
         // 只保留 arm64-v8a 架构以减小 APK 体积（现代设备都支持）
         ndk {
@@ -121,6 +121,7 @@ android {
 dependencies {
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -158,11 +159,13 @@ dependencies {
     // Kotlin Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     
-    // Lottie - 用于显示JSON动画（声音模块需要）
+    // Lottie - 用于显示JSON动画
     implementation("com.airbnb.android:lottie:6.3.0")
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
     
     // ExoPlayer/Media3 - 用于无缝循环播放音频（声音模块需要）
     implementation("androidx.media3:media3-exoplayer:1.8.0")
+    implementation("androidx.media3:media3-exoplayer-hls:1.8.0")
     implementation("androidx.media3:media3-ui:1.8.0")
     implementation("androidx.media3:media3-common:1.8.0")
     implementation("androidx.media3:media3-session:1.8.0")
