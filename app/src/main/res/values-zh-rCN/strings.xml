@@ -39,6 +39,8 @@
     <string name="sound_default">声音</string>
     
     <!-- 预设空状态提示 -->
+    <string name="preset_rename_hint">点击预设文字可修改名称</string>
+    
     <string name="preset_empty_hint">长按音频卡片添加到此预设</string>
     <string name="play_preset">播放预设</string>
     <string name="pause_preset">暂停预设</string>

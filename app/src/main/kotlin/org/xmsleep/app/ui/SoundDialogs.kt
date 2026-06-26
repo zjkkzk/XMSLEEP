@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import org.xmsleep.app.R
 import org.xmsleep.app.audio.AudioManager
+import org.xmsleep.app.preferences.PreferencesManager
 
 /**
  * 音量调节对话框
@@ -109,7 +110,8 @@ fun TimerDialog(
     currentTimerMinutes: Int = 0
 ) {
     val context = LocalContext.current
-    var selectedMinutes by remember { mutableStateOf(if (currentTimerMinutes > 0) currentTimerMinutes else 30) }
+    val lastTimerMinutes = remember { PreferencesManager.getLastTimerMinutes(context) }
+    var selectedMinutes by remember { mutableStateOf(if (currentTimerMinutes > 0) currentTimerMinutes else (if (lastTimerMinutes > 0) lastTimerMinutes else 30)) }
     val presetMinutes = listOf(15, 30, 45, 60, 90, 120)
 
     AlertDialog(
@@ -134,6 +136,19 @@ fun TimerDialog(
                         text = context.getString(R.string.current_countdown, statusText),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (lastTimerMinutes > 0) {
+                    val lastHours = lastTimerMinutes / 60
+                    val lastMins = lastTimerMinutes % 60
+                    val lastText = if (lastHours > 0) {
+                        context.getString(R.string.hours_minutes, lastHours, if (lastMins > 0) lastMins else 0)
+                    } else {
+                        context.getString(R.string.minutes_only, lastMins)
+                    }
+                    Text(
+                        text = context.getString(R.string.last_timer_hint, lastText),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(
@@ -207,7 +222,7 @@ fun TimerDialog(
                         Text(context.getString(R.string.cancel_countdown))
                     }
                 }
-                TextButton(onClick = { onTimerSet(selectedMinutes) }) {
+                TextButton(onClick = { PreferencesManager.saveLastTimerMinutes(context, selectedMinutes); onTimerSet(selectedMinutes) }) {
                     Text(context.getString(R.string.ok))
                 }
             }

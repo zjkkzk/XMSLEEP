@@ -252,13 +252,18 @@ object BilibiliApi {
                 .addQueryParameter("page", page.toString())
                 .build()
             val request = reqUrl(httpUrl).build()
-            val json = JSONObject(client.newCall(request).execute().body!!.string())
+            val responseStr = client.newCall(request).execute().body!!.string()
+            if (responseStr.trimStart().startsWith("<!DOCTYPE") || responseStr.trimStart().startsWith("<html")) {
+                Logger.w(TAG, "searchRooms: got HTML instead of JSON, trying fallback")
+                return@withContext searchRoomsFallback(keyword, page)
+            }
+            val json = JSONObject(responseStr)
             if (json.getInt("code") != 0) {
-                Logger.w(TAG, "searchRooms: code=${json.getInt("code")}")
-                return@withContext emptyList()
+                Logger.w(TAG, "searchRooms: code=${json.getInt("code")}, trying fallback")
+                return@withContext searchRoomsFallback(keyword, page)
             }
             val rooms = json.getJSONObject("data").getJSONObject("result").optJSONArray("live_room")
-                ?: return@withContext emptyList()
+                ?: return@withContext searchRoomsFallback(keyword, page)
             (0 until rooms.length()).map { i ->
                 val r = rooms.getJSONObject(i)
                 LiveRoom(
@@ -271,9 +276,33 @@ object BilibiliApi {
                 )
             }.filter { it.online > 0 }
         } catch (e: Exception) {
-            Logger.e(TAG, "searchRooms failed for keyword=$keyword: ${e.message}")
-            emptyList()
+            Logger.e(TAG, "searchRooms failed for keyword=$keyword: ${e.message}, trying fallback")
+            searchRoomsFallback(keyword, page)
         }
+    }
+
+    private suspend fun searchRoomsFallback(keyword: String, page: Int = 1): List<LiveRoom> {
+        Logger.d(TAG, "searchRoomsFallback: keyword=$keyword, page=$page")
+        // Try api.live.bilibili.com category endpoints (not affected by api.bilibili.com blocks)
+        val areaConfigs = listOf(
+            "0" to "0",   // 推荐 (recommended)
+            "4" to "0",   // 电台-全部 (radio-all)
+        )
+        val allResults = mutableListOf<LiveRoom>()
+        for ((parentAreaId, areaId) in areaConfigs) {
+            try {
+                val rooms = getCategoryRooms(parentAreaId, areaId, page)
+                allResults.addAll(rooms)
+            } catch (e: Exception) {
+                Logger.w(TAG, "searchRoomsFallback: getCategoryRooms($parentAreaId,$areaId) failed: ${e.message}")
+            }
+        }
+        val filtered = allResults
+            .filter { it.title.contains(keyword) && it.online > 0 }
+            .distinctBy { it.roomId }
+            .sortedByDescending { it.online }
+        Logger.d(TAG, "searchRoomsFallback: got ${filtered.size} results for keyword=$keyword")
+        return filtered
     }
 
     suspend fun getLiveUrl(roomId: String): String? = withContext(Dispatchers.IO) {

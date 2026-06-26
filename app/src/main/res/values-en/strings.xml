@@ -119,9 +119,13 @@
     <string name="cancel_favorite">Unfavorite</string>
     <string name="pinned_success">Added to Preset</string>
     <string name="unpinned_success">Removed from Preset</string>
+    <string name="rename_preset">Rename Preset</string>
+    <string name="new_preset">New Preset</string>
+    <string name="preset_name_template">Preset %d</string>
     <string name="favorited_success">Favorited</string>
     <string name="unfavorited_success">Unfavorited</string>
     <string name="current_countdown">Current countdown: %1$s</string>
+    <string name="last_timer_hint">Last timer: %1$s</string>
     <string name="please_play_sound_before_timer">Please play a sound before setting countdown</string>
     <string name="quick_select">Quick Select</string>
     <string name="tab_builtin">Built-in</string>
@@ -245,6 +249,8 @@ If you have any questions, please contact us through the in-app contact method.<
     <string name="sound_default">Sound</string>
     
     <!-- Preset Empty State Hint -->
+    <string name="preset_rename_hint">Tap preset name to rename</string>
+    
     <string name="preset_empty_hint">Long press sound cards to add</string>
     <string name="close">Close</string>
     

@@ -118,9 +118,13 @@
     <string name="cancel_favorite">取消收藏</string>
     <string name="pinned_success">已添加預設</string>
     <string name="unpinned_success">已取消預設</string>
+    <string name="rename_preset">重新命名預設</string>
+    <string name="new_preset">新增預設</string>
+    <string name="preset_name_template">預設%d</string>
     <string name="favorited_success">已收藏</string>
     <string name="unfavorited_success">已取消收藏</string>
     <string name="current_countdown">當前倒計時: %1$s</string>
+    <string name="last_timer_hint">上次計時: %1$s</string>
     <string name="please_play_sound_before_timer">請先播放聲音後再設定倒計時</string>
     <string name="quick_select">快速選擇</string>
     <string name="tab_builtin">內建</string>
@@ -255,6 +259,8 @@
     <string name="preset_max_reached">當前預設已達到最多10個聲音</string>
     
     <!-- 預設空狀態提示 -->
+    <string name="preset_rename_hint">點擊預設文字可修改名稱</string>
+    
     <string name="preset_empty_hint">長按音頻卡片添加到此預設</string>
     <string name="play_preset">播放預設</string>
     <string name="pause_preset">暫停預設</string>

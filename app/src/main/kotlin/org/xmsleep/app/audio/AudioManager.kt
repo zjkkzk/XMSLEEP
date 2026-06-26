@@ -81,6 +81,10 @@ class AudioManager private constructor() {
         onStopRadioRequested = callback
     }
 
+    fun stopRadio() {
+        onStopRadioRequested?.invoke()
+    }
+
     // 电台恢复请求回调（由 RadioViewModel 注册）
     private var onRadioResumeRequested: (() -> Unit)? = null
     // 电台是否在暂停前正在播放（跨 MusicService 销毁持久化）
@@ -204,6 +208,7 @@ class AudioManager private constructor() {
      */
     @UnstableApi
     fun playSound(context: Context, sound: Sound) {
+        stopRadio()
         musicServiceManager.setPausedState(false)
         Logger.d(TAG, "playSound 被调用: ${sound.name}")
 
@@ -260,7 +265,27 @@ class AudioManager private constructor() {
     }
 
     /**
-     * 暂停所有声音
+     * 暂停所有声音（不触发电台停止）
+     */
+    fun pauseSoundsOnly() {
+        musicServiceManager.setPausedState(true)
+        try {
+            saveRecentPlayingSounds()
+
+            localSoundPlayer.pauseAllSounds()
+            remoteSoundPlayer.pauseAllRemoteSounds()
+
+            playingQueue.clear()
+            notifyServicePlayingStateChanged()
+
+            Logger.d(TAG, "所有声音已暂停（电台除外）")
+        } catch (e: Exception) {
+            Logger.e(TAG, "暂停所有声音时发生错误: ${e.message}")
+        }
+    }
+
+    /**
+     * 暂停所有声音（含电台）
      */
     fun pauseAllSounds() {
         musicServiceManager.setPausedState(true)
@@ -449,6 +474,7 @@ class AudioManager private constructor() {
         metadata: org.xmsleep.app.audio.model.SoundMetadata,
         uri: android.net.Uri
     ) {
+        stopRadio()
         musicServiceManager.setPausedState(false)
         initializeIfNeeded(context)
 

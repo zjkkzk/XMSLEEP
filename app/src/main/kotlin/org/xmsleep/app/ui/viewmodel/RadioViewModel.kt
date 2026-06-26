@@ -66,6 +66,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     private var bilibiliPlayJob: Job? = null
     private var bilibiliWatchdog: Job? = null
     private var searchJob: Job? = null
+    private var preloadJob: Job? = null
 
     init {
         loadSavedStation()
@@ -82,7 +83,8 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         audioManager.setOnStopRadioRequested {
-            _radioPlayer.pause()
+            Logger.d("RadioViewModel", "stopRadio callback invoked, calling stopBilibiliRoom, currentStation.type=${_currentStation.value.type}")
+            stopBilibiliRoom()
         }
         audioManager.setOnRadioResumeRequested {
             val station = _currentStation.value
@@ -126,6 +128,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun playBilibiliRoom(roomId: String, room: BilibiliApi.LiveRoom? = null) {
+        Logger.d("RadioViewModel", "playBilibiliRoom: roomId=$roomId, room=$room")
         val context = getApplication<Application>()
         bilibiliWatchdog?.cancel()
         bilibiliPlayJob?.cancel()
@@ -136,18 +139,29 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             _playingRoomInfo.value = room
         }
         bilibiliPlayJob = viewModelScope.launch {
+            Logger.d("RadioViewModel", "playBilibiliRoom: fetching roomInfo for $roomId")
             val roomInfo = BilibiliApi.getRoomInfo(roomId)
             if (roomInfo == null || !roomInfo.isLive) {
                 Logger.w("RadioViewModel", "Bilibili room $roomId 未开播")
+                if (!_radioPlayer.isPlaying.value && _playingRoomId.value == roomId) {
+                    _playingRoomId.value = null
+                    _playingRoomInfo.value = null
+                }
                 return@launch
             }
             // use the long room ID (realRoomId) for stream URL request
             val playRoomId = roomInfo.realRoomId
+            Logger.d("RadioViewModel", "playBilibiliRoom: fetching liveUrl for $playRoomId")
             val liveUrl = BilibiliApi.getLiveUrl(playRoomId)
             if (liveUrl == null) {
                 Logger.w("RadioViewModel", "获取 Bilibili 直播地址失败: $playRoomId")
+                if (!_radioPlayer.isPlaying.value) {
+                    _playingRoomId.value = null
+                    _playingRoomInfo.value = null
+                }
                 return@launch
             }
+            Logger.d("RadioViewModel", "playBilibiliRoom: got liveUrl, starting playback")
             _playingRoomId.value = roomId
             val playable = _currentStation.value.copy(
                 url = liveUrl, isHls = liveUrl.contains(".m3u8") || liveUrl.contains(".m3u"),
@@ -164,6 +178,9 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     // 排除的游戏/娱乐分区 (old_area_id): 1=网游 2=手游 3=单机 4=娱乐 7=赛事 13=赛事
     private val excludeAreas = setOf(1, 2, 3, 4, 7, 13)
 
+    // 排除的特定房间 ID
+    private val excludeRoomIds = setOf("510507")
+
     private val excludeTitleKeywords = listOf(
         "聊天", "唱歌", "陪打", "声控", "连麦", "喊麦", "脱口秀",
         "恋爱", "交友", "颜值", "舞蹈", "游戏", "直播打", "pk",
@@ -172,10 +189,12 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
         "点歌", "互动", "陪玩", "陪看", "接单", "上分", "代练",
         "娱乐", "搞笑", "整蛊", "挑战", "抽奖", "红包", "唱歌",
         "御姐", "萝莉", "大叔", "姐姐", "妹妹", "男友", "女友",
-        "哄睡", "耳语", "舔耳", "磕CP", "心动", "大冒险"
+        "哄睡", "耳语", "舔耳", "磕CP", "心动", "大冒险",
+        "小魔仙"
     )
 
     private fun searchBilibiliRooms(keyword: String) {
+        Logger.d("RadioViewModel", "searchBilibiliRooms: keyword=$keyword")
         searchJob?.cancel()
         _isSearching.value = true
         _searchKeyword.value = keyword
@@ -183,10 +202,12 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             val results = BilibiliApi.searchRooms(keyword)
                 .filter { room ->
                     room.area !in excludeAreas &&
+                    room.roomId !in excludeRoomIds &&
                     excludeTitleKeywords.none { room.title.contains(it) } &&
                     (room.title.contains(keyword))
                 }
                 .sortedByDescending { it.online }
+            Logger.d("RadioViewModel", "searchBilibiliRooms: got ${results.size} results")
             if (_searchKeyword.value == keyword) {
                 _bilibiliRooms.value = results
                 _isSearching.value = false
@@ -220,47 +241,122 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
 
     fun playIfNeeded() {
         if (!hasAutoPlayed) {
+            Logger.d("RadioViewModel", "playIfNeeded: first time, play()")
             hasAutoPlayed = true
-            viewModelScope.launch {
-                play()
-            }
+            play()
         } else if (!_radioPlayer.isPlaying.value) {
-            searchBilibiliRooms("白噪音")
+            Logger.d("RadioViewModel", "playIfNeeded: not playing, preload search")
+            preloadJob?.cancel()
+            preloadJob = viewModelScope.launch {
+                val results = BilibiliApi.searchRooms("白噪音")
+                    .filter { room ->
+                        room.area !in excludeAreas &&
+                        room.roomId !in excludeRoomIds &&
+                        excludeTitleKeywords.none { room.title.contains(it) } &&
+                        (room.title.contains("白噪音"))
+                    }
+                    .sortedByDescending { it.online }
+                Logger.d("RadioViewModel", "playIfNeeded: preload got ${results.size} results")
+                _bilibiliRooms.value = results
+                _isSearching.value = false
+            }
+        } else {
+            Logger.d("RadioViewModel", "playIfNeeded: already playing, skip")
         }
     }
 
     fun togglePlayPause() {
         val context = getApplication<Application>()
+        Logger.d("RadioViewModel", "togglePlayPause: isPlaying=${_radioPlayer.isPlaying.value}, station.url='${_currentStation.value.url}', station.type=${_currentStation.value.type}, results.size=${_bilibiliRooms.value.size}")
         if (_radioPlayer.isPlaying.value) {
+            Logger.d("RadioViewModel", "togglePlayPause: pause")
             _radioPlayer.pause()
         } else {
             val station = _currentStation.value
             if (station.url.isNotEmpty()) {
+                Logger.d("RadioViewModel", "togglePlayPause: play with existing URL")
+                AudioManager.getInstance().pauseSoundsOnly()
                 _radioPlayer.play(context, station)
                 _radioPlayer.setVolume(_volume.value)
             } else if (station.type == StationType.BilibiliCategory) {
+                Logger.d("RadioViewModel", "togglePlayPause: fresh search and play")
+                AudioManager.getInstance().pauseSoundsOnly()
                 autoSearchAndPlay(station.searchKeyword ?: "白噪音")
             }
         }
     }
 
     private fun autoSearchAndPlay(keyword: String) {
+        Logger.d("RadioViewModel", "autoSearchAndPlay: keyword=$keyword")
         searchJob?.cancel()
         _isSearching.value = true
         searchJob = viewModelScope.launch {
             val results = BilibiliApi.searchRooms(keyword)
                 .filter { room ->
                     room.area !in excludeAreas &&
+                    room.roomId !in excludeRoomIds &&
                     excludeTitleKeywords.none { room.title.contains(it) } &&
                     (room.title.contains(keyword))
                 }
                 .sortedByDescending { it.online }
+            Logger.d("RadioViewModel", "autoSearchAndPlay: got ${results.size} results")
             _bilibiliRooms.value = results
             _isSearching.value = false
-            if (results.isNotEmpty()) {
-                playBilibiliRoom(results.first().roomId, results.first())
+            var played = false
+            for (room in results) {
+                Logger.d("RadioViewModel", "autoSearchAndPlay: trying room ${room.roomId} ${room.title}")
+                val roomInfo = BilibiliApi.getRoomInfo(room.roomId)
+                if (roomInfo == null || !roomInfo.isLive) {
+                    Logger.d("RadioViewModel", "autoSearchAndPlay: room not live, skip")
+                    continue
+                }
+                val liveUrl = BilibiliApi.getLiveUrl(roomInfo.realRoomId)
+                if (liveUrl == null) {
+                    Logger.d("RadioViewModel", "autoSearchAndPlay: no liveUrl, skip")
+                    continue
+                }
+                Logger.d("RadioViewModel", "autoSearchAndPlay: playing room ${room.roomId}")
+                bilibiliWatchdog?.cancel()
+                bilibiliPlayJob?.cancel()
+                _playingRoomId.value = room.roomId
+                _playingRoomInfo.value = room
+                val playable = _currentStation.value.copy(
+                    url = liveUrl, isHls = liveUrl.contains(".m3u8") || liveUrl.contains(".m3u"),
+                    roomId = room.roomId, type = StationType.BilibiliLive
+                )
+                _currentStation.value = playable
+                val context = getApplication<Application>()
+                _radioPlayer.play(context, playable)
+                _radioPlayer.setVolume(_volume.value)
+                PreferencesManager.saveRadioStationId(context, _currentStation.value.id)
+                startBilibiliWatchdog(room.roomId)
+                played = true
+                break
+            }
+            if (!played) {
+                Logger.d("RadioViewModel", "autoSearchAndPlay: no live Bilibili rooms, trying fallback streams")
+                fallbackToDirectStream()
             }
         }
+    }
+
+    private fun fallbackToDirectStream() {
+        val context = getApplication<Application>()
+        val streamStations = RadioStation.STATIONS.filter { it.type == StationType.Stream && it.url.isNotEmpty() }
+        if (streamStations.isEmpty()) {
+            Logger.w("RadioViewModel", "fallbackToDirectStream: no Stream stations available")
+            return
+        }
+        val fallback = streamStations.first()
+        Logger.d("RadioViewModel", "fallbackToDirectStream: playing ${fallback.name}")
+        bilibiliWatchdog?.cancel()
+        bilibiliPlayJob?.cancel()
+        _playingRoomId.value = null
+        _playingRoomInfo.value = null
+        _currentStation.value = fallback
+        _radioPlayer.play(context, fallback)
+        _radioPlayer.setVolume(_volume.value)
+        PreferencesManager.saveRadioStationId(context, fallback.id)
     }
 
     fun pause() {
@@ -279,6 +375,7 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
+        preloadJob?.cancel()
         searchJob?.cancel()
         bilibiliPlayJob?.cancel()
         bilibiliWatchdog?.cancel()
@@ -320,12 +417,14 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stopBilibiliRoom() {
+        Logger.d("RadioViewModel", "stopBilibiliRoom: currentStation.type=${_currentStation.value.type}, playingRoomId=${_playingRoomId.value}")
         bilibiliWatchdog?.cancel()
         bilibiliPlayJob?.cancel()
         _radioPlayer.stop()
         _playingRoomId.value = null
         _playingRoomInfo.value = null
         if (_currentStation.value.type == StationType.BilibiliLive) {
+            Logger.d("RadioViewModel", "stopBilibiliRoom: resetting to default station")
             _currentStation.value = RadioStation.defaultStation
             PreferencesManager.saveRadioStationId(getApplication(), RadioStation.defaultStation.id)
         }

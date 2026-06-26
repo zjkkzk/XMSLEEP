@@ -140,6 +140,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
 import java.util.concurrent.TimeUnit
 import org.xmsleep.app.R
+import org.xmsleep.app.preferences.PreferencesManager
 import org.xmsleep.app.audio.AudioManager
 import org.xmsleep.app.timer.TimerManager
 import org.xmsleep.app.i18n.LanguageManager
@@ -374,9 +375,10 @@ fun SoundsScreen(
     onBackgroundSelectionChange: (BackgroundSelection) -> Unit = {},
     columnsCount: Int = 2,
     onColumnsCountChange: (Int) -> Unit = {},
-    preset1Sounds: MutableState<MutableSet<AudioManager.Sound>>,
-    preset2Sounds: MutableState<MutableSet<AudioManager.Sound>>,
-    preset3Sounds: MutableState<MutableSet<AudioManager.Sound>>,
+    presetList: List<PreferencesManager.PresetEntry> = emptyList(),
+    onPresetListChange: (List<PreferencesManager.PresetEntry>) -> Unit = {},
+    presetSoundsMap: Map<Int, MutableSet<AudioManager.Sound>> = emptyMap(),
+    pinnedSounds: MutableState<MutableSet<AudioManager.Sound>>,
     activePreset: Int = 1,
     onActivePresetChange: (Int) -> Unit = {},
     hasAnyPresetItems: Boolean = false,
@@ -386,18 +388,10 @@ fun SoundsScreen(
     onShowDeveloperLetter: () -> Unit = {},
     updateViewModel: UpdateViewModel? = null,
     hazeState: dev.chrisbanes.haze.HazeState? = null,
-    contentAlpha: Float = 1f, // 内容透明度（用于禁用点击）
+    contentAlpha: Float = 1f,
     soundsViewModel: SoundsViewModel = hiltViewModel()
 ) {
-    // 预设弹窗显示状态
     var showPresetDialog by remember { mutableStateOf(false) }
-    // 根据 activePreset 动态获取当前预设的 pinnedSounds
-    val pinnedSounds = when (activePreset) {
-        1 -> preset1Sounds
-        2 -> preset2Sounds
-        3 -> preset3Sounds
-        else -> preset1Sounds
-    }
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
@@ -1041,13 +1035,19 @@ fun SoundsScreen(
         
         // 预设弹窗
         if (showPresetDialog && hasDefaultItems) {
+            var showRenameDialog by remember { mutableStateOf(false) }
+            var renamePresetId by remember { mutableIntStateOf(activePreset) }
+            var renamePresetName by remember { mutableStateOf("") }
+            var showNewPresetDialog by remember { mutableStateOf(false) }
+            var newPresetName by remember { mutableStateOf("") }
+
             Dialog(
-                onDismissRequest = { showPresetDialog = false }
+                onDismissRequest = { showPresetDialog = false; isDefaultAreaEditMode = false }
             ) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth(0.95f) // 使用95%的屏幕宽度
-                        .wrapContentHeight(),
+                        .fillMaxWidth(0.95f)
+                        .heightIn(max = 600.dp),
                     shape = RoundedCornerShape(28.dp),
                     color = MaterialTheme.colorScheme.surface,
                     tonalElevation = 6.dp
@@ -1055,7 +1055,6 @@ fun SoundsScreen(
                     Column(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // 标题栏：左侧标题 + 右侧编辑按钮
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1067,10 +1066,8 @@ fun SoundsScreen(
                                 text = context.getString(R.string.preset),
                                 style = MaterialTheme.typography.headlineSmall
                             )
-                            
-                            // 编辑按钮
+
                             if (isDefaultAreaEditMode) {
-                                // 编辑模式下显示"完成"
                                 TextButton(
                                     onClick = { isDefaultAreaEditMode = false }
                                 ) {
@@ -1087,7 +1084,6 @@ fun SoundsScreen(
                                     }
                                 }
                             } else {
-                                // 默认状态显示笔图标
                                 IconButton(
                                     onClick = { isDefaultAreaEditMode = true }
                                 ) {
@@ -1099,13 +1095,12 @@ fun SoundsScreen(
                                 }
                             }
                         }
-                        
-                        // 预设内容区域
+
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f, fill = false) // 不强制填充，根据内容自适应
-                                .heightIn(max = 500.dp) // 最大高度限制
+                                .weight(1f, fill = false)
+                                .heightIn(max = 480.dp)
                         ) {
                             DefaultArea(
                                 soundItems = soundItems,
@@ -1116,25 +1111,16 @@ fun SoundsScreen(
                                 context = context,
                                 isEditMode = isDefaultAreaEditMode,
                                 onEditModeChange = { isDefaultAreaEditMode = it },
-                                isExpanded = true, // 弹窗中始终展开
+                                isExpanded = true,
                                 activePreset = activePreset,
                                 onActivePresetChange = onActivePresetChange,
-                                showEditButton = false, // 弹窗中隐藏编辑按钮（已移到标题栏）
+                                showEditButton = false,
                                 onPinnedChange = { sound, isPinned ->
                                     val currentSet = pinnedSounds.value.toMutableSet()
                                     if (isPinned) {
-                                        val totalPinned = currentSet.size + remotePinned.size
-                                        if (totalPinned >= 10) {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                context.getString(R.string.preset_max_reached),
-                                                android.widget.Toast.LENGTH_SHORT
-                                            ).show()
-                                        } else {
-                                            currentSet.add(sound)
-                                            playingStates[sound] = audioManager.isPlayingSound(sound)
-                                            pinnedSounds.value = currentSet
-                                        }
+                                        currentSet.add(sound)
+                                        playingStates[sound] = audioManager.isPlayingSound(sound)
+                                        pinnedSounds.value = currentSet
                                     } else {
                                         currentSet.remove(sound)
                                         pinnedSounds.value = currentSet
@@ -1147,21 +1133,12 @@ fun SoundsScreen(
                                 onRemotePinnedChange = { soundId, isPinned ->
                                     val newSet = remotePinned.toMutableSet()
                                     if (isPinned) {
-                                        val totalPinned = pinnedSounds.value.size + newSet.size
-                                        if (totalPinned >= 10) {
-                                            android.widget.Toast.makeText(
-                                                context,
-                                                context.getString(R.string.preset_max_reached),
-                                                android.widget.Toast.LENGTH_SHORT
-                                            ).show()
-                                        } else {
-                                            newSet.add(soundId)
-                                        }
+                                        newSet.add(soundId)
                                     } else {
                                         newSet.remove(soundId)
                                     }
                                     remotePinned = newSet
-                                    org.xmsleep.app.preferences.PreferencesManager.savePresetRemotePinned(context, activePreset, newSet)
+                                    PreferencesManager.savePresetRemotePinned(context, activePreset, newSet)
                                 },
                                 onRemoteCardClick = { sound ->
                                     scope.launch {
@@ -1180,7 +1157,6 @@ fun SoundsScreen(
                                                         }
                                                         is org.xmsleep.app.audio.DownloadProgress.Success -> {
                                                             downloadingSounds = downloadingSounds - sound.id
-                                                            // 等待文件系统同步后再播放
                                                             delay(200)
                                                             val uri = resourceManager.getSoundUri(sound)
                                                             if (uri != null) {
@@ -1215,11 +1191,34 @@ fun SoundsScreen(
                                 },
                                 getSoundDisplayName = { sound -> getSoundDisplayName(sound) },
                                 scope = scope,
-                                resourceManager = resourceManager
+                                resourceManager = resourceManager,
+                                presetList = presetList,
+                                verticalLayout = true,
+                                onAddPreset = {
+                                    val nextNum = presetList.size + 1
+                                    newPresetName = context.getString(R.string.preset_name_template, nextNum)
+                                    showNewPresetDialog = true
+                                },
+                                onRenamePreset = { id ->
+                                    val entry = presetList.find { it.id == id }
+                                    if (entry != null) {
+                                        renamePresetId = id
+                                        renamePresetName = entry.name
+                                        showRenameDialog = true
+                                    }
+                                },
+                                onDeletePreset = { id ->
+                                    if (presetList.size <= 1) return@DefaultArea
+                                    PreferencesManager.removePreset(context, id)
+                                    val updated = PreferencesManager.getPresetList(context)
+                                    onPresetListChange(updated)
+                                    if (activePreset == id && updated.isNotEmpty()) {
+                                        onActivePresetChange(updated.first().id)
+                                    }
+                                }
                             )
                         }
-                        
-                        // 底部按钮：播放/暂停 + 关闭
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1227,11 +1226,9 @@ fun SoundsScreen(
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 播放/暂停按钮
                             TextButton(
                                 onClick = {
                                     if (defaultAreaSoundsPlaying) {
-                                        // 暂停所有预设的声音（本地和远程）
                                         pinnedSounds.value.forEach { sound ->
                                             if (audioManager.isPlayingSound(sound)) {
                                                 audioManager.pauseSound(sound)
@@ -1246,16 +1243,13 @@ fun SoundsScreen(
                                             }
                                         }
                                     } else {
-                                        // 播放所有预设的声音（本地和远程）
                                         pinnedSounds.value.forEach { sound ->
                                             if (!audioManager.isPlayingSound(sound)) {
-                                                soundPlayingPreset[sound] = activePreset // 记录从哪个预设播放
+                                                soundPlayingPreset[sound] = activePreset
                                                 audioManager.playSound(context, sound)
-                                                // 立即更新状态，不延迟
                                                 playingStates[sound] = true
                                             }
                                         }
-                                        // 远程音频需要先下载，这里只播放已缓存的
                                         scope.launch {
                                             defaultRemoteSounds.filter { remotePinned.contains(it.id) }.forEach { sound ->
                                                 if (!audioManager.isPlayingRemoteSound(sound.id)) {
@@ -1267,13 +1261,11 @@ fun SoundsScreen(
                                                 }
                                             }
                                         }
-                                        
-                                        // 检查是否设置了自动倒计时
-                                        val autoCountdownMinutes = org.xmsleep.app.preferences.PreferencesManager.getAutoCountdownMinutes(context)
+
+                                        val autoCountdownMinutes = PreferencesManager.getAutoCountdownMinutes(context)
                                         if (autoCountdownMinutes > 0) {
-                                            // 自动启动倒计时
                                             scope.launch {
-                                                delay(500) // 等待声音开始播放
+                                                delay(500)
                                                 timerManager.startTimer(autoCountdownMinutes)
                                             }
                                         }
@@ -1288,13 +1280,73 @@ fun SoundsScreen(
                                     }
                                 )
                             }
-                            // 关闭按钮
-                            TextButton(onClick = { showPresetDialog = false }) {
+                            TextButton(onClick = { showPresetDialog = false; isDefaultAreaEditMode = false }) {
                                 Text(context.getString(R.string.close))
                             }
                         }
                     }
                 }
+            }
+
+            if (showRenameDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRenameDialog = false },
+                    title = { Text(context.getString(R.string.rename_preset)) },
+                    text = {
+                        OutlinedTextField(
+                            value = renamePresetName,
+                            onValueChange = { renamePresetName = it },
+                            singleLine = true
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            if (renamePresetName.isNotBlank()) {
+                                PreferencesManager.renamePreset(context, renamePresetId, renamePresetName)
+                                onPresetListChange(PreferencesManager.getPresetList(context))
+                            }
+                            showRenameDialog = false
+                        }) {
+                            Text(context.getString(R.string.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showRenameDialog = false }) {
+                            Text(context.getString(R.string.cancel))
+                        }
+                    }
+                )
+            }
+
+            if (showNewPresetDialog) {
+                AlertDialog(
+                    onDismissRequest = { showNewPresetDialog = false },
+                    title = { Text(context.getString(R.string.new_preset)) },
+                    text = {
+                        OutlinedTextField(
+                            value = newPresetName,
+                            onValueChange = { newPresetName = it },
+                            singleLine = true
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            if (newPresetName.isNotBlank()) {
+                                val id = PreferencesManager.addPreset(context, newPresetName)
+                                onPresetListChange(PreferencesManager.getPresetList(context))
+                                onActivePresetChange(id)
+                            }
+                            showNewPresetDialog = false
+                        }) {
+                            Text(context.getString(R.string.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showNewPresetDialog = false }) {
+                            Text(context.getString(R.string.cancel))
+                        }
+                    }
+                )
             }
         }
         

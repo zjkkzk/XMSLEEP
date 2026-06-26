@@ -320,10 +320,12 @@ internal fun AnimatedWebPImage(
     var animatedDrawable by remember { mutableStateOf<AnimatedImageDrawable?>(null) }
     LaunchedEffect(isPlaying, animatedDrawable) {
         val drawable = animatedDrawable ?: return@LaunchedEffect
-        if (isPlaying) {
-            if (!drawable.isRunning) drawable.start()
-        } else {
-            if (drawable.isRunning) drawable.stop()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (isPlaying) {
+                if (!drawable.isRunning) drawable.start()
+            } else {
+                if (drawable.isRunning) drawable.stop()
+            }
         }
     }
     val colorMatrix = remember(darkColor, lightColor) {

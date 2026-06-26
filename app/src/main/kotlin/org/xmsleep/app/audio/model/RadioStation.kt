@@ -28,6 +28,36 @@ data class RadioStation(
                 icon = "🌧️",
                 type = StationType.BilibiliCategory,
                 searchKeyword = "白噪音"
+            ),
+            RadioStation(
+                id = "somafm_dronezone",
+                name = "Drone Zone",
+                genre = "SomaFM",
+                tags = listOf(R.string.tag_healing, R.string.tag_stress_relief),
+                icon = "🎧",
+                type = StationType.Stream,
+                url = "https://ice2.somafm.com/dronezone-128-mp3",
+                isHls = false
+            ),
+            RadioStation(
+                id = "somafm_deepspace",
+                name = "Deep Space One",
+                genre = "SomaFM",
+                tags = listOf(R.string.tag_healing, R.string.tag_stress_relief),
+                icon = "🚀",
+                type = StationType.Stream,
+                url = "https://ice2.somafm.com/deepspaceone-128-mp3",
+                isHls = false
+            ),
+            RadioStation(
+                id = "somafm_spacestation",
+                name = "Space Station",
+                genre = "SomaFM",
+                tags = listOf(R.string.tag_healing, R.string.tag_stress_relief),
+                icon = "🛰️",
+                type = StationType.Stream,
+                url = "https://ice2.somafm.com/spacestation-128-mp3",
+                isHls = false
             )
         )
 

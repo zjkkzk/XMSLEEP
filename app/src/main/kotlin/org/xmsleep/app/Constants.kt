@@ -89,6 +89,11 @@ object Constants {
         const val PRESET2_REMOTE_PINNED = "preset2_remote_pinned"
         const val PRESET3_REMOTE_PINNED = "preset3_remote_pinned"
         const val ACTIVE_PRESET = "active_preset"
+        const val PRESET_LIST = "preset_list"
+        const val PRESET_NAME_PREFIX = "preset_name_"
+        const val PRESET_LOCAL_PREFIX = "preset_local_"
+        const val PRESET_REMOTE_PREFIX = "preset_remote_"
+        const val MAX_PRESET_COUNT = 10
         
         const val LOCAL_AUDIO_FAVORITES = "local_audio_favorites"
         const val RECENT_LOCAL_SOUNDS = "recent_local_sounds"
@@ -98,6 +103,7 @@ object Constants {
         
         const val BACKGROUND_SELECTION = "background_animation_selection"
         const val AUTO_COUNTDOWN_MINUTES = "auto_countdown_minutes"
+        const val LAST_TIMER_MINUTES = "last_timer_minutes"
         const val KEEP_SCREEN_ON = "keep_screen_on"
         
         // 最近播放弹窗开关

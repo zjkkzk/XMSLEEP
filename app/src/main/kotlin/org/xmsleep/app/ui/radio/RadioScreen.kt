@@ -27,7 +27,6 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
@@ -38,7 +37,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -282,22 +280,11 @@ fun RadioScreen(
 
                 // 播放/暂停按钮 + 菜单 + 音量控制
                 val playInteractionSource = remember { MutableInteractionSource() }
-                val isPlayPressed by playInteractionSource.collectIsPressedAsState()
-
-                val playButtonScale by animateFloatAsState(
-                    targetValue = if (isPlayPressed) 1.15f else 1f,
-                    animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = 0.5f),
-                    label = "playScale"
-                )
-                val sideSpacing by animateDpAsState(
-                    targetValue = if (isPlayPressed) 28.dp else 20.dp,
-                    animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = 0.5f),
-                    label = "sideSpacing"
-                )
+                val isSquare = isPlaying || isBuffering
 
                 Row(
                     modifier = Modifier.fillMaxWidth(0.85f),
-                    horizontalArrangement = Arrangement.spacedBy(sideSpacing, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
@@ -319,14 +306,16 @@ fun RadioScreen(
                         }
                     }
 
+                    val buttonWidth by animateDpAsState(
+                        targetValue = if (isSquare) 100.dp else 120.dp,
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = 0.5f),
+                        label = "buttonWidth"
+                    )
                     Button(
                         onClick = { viewModel.togglePlayPause() },
                         modifier = Modifier
-                            .size(100.dp)
-                            .graphicsLayer {
-                                scaleX = playButtonScale
-                                scaleY = playButtonScale
-                            },
+                            .width(buttonWidth)
+                            .height(100.dp),
                         shape = RoundedCornerShape(22.dp),
                         contentPadding = PaddingValues(0.dp),
                         interactionSource = playInteractionSource
@@ -341,7 +330,7 @@ fun RadioScreen(
                             Icon(
                                 imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                                 contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                modifier = Modifier.size(60.dp)
+                                modifier = Modifier.size(if (isSquare) 60.dp else 44.dp)
                             )
                         }
                     }
@@ -385,7 +374,7 @@ fun RadioScreen(
         )
 
         FloatingRadioBubble(
-            visible = playingRoomId != null,
+            visible = playingRoomId != null && isPlaying,
             room = playingRoomInfo,
             roomId = playingRoomId,
             isPlaying = isPlaying,

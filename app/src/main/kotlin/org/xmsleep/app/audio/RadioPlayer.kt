@@ -37,23 +37,6 @@ class RadioPlayer {
     val isBuffering: StateFlow<Boolean> = _isBuffering.asStateFlow()
 
     private var volume = 0.5f
-    private var audioFocusManager: AudioFocusManager? = null
-
-    private val audioFocusCallback = object : AudioFocusManager.Callback {
-        override fun onAudioFocusLost() {
-            pause()
-        }
-        override fun onAudioFocusLostTransient() {
-            pause()
-        }
-        override fun onAudioFocusLostCanDuck() {
-            player?.volume = volume * 0.3f
-        }
-        override fun onAudioFocusGained() {
-            player?.volume = volume
-        }
-    }
-
     private var retryCount = 0
     private var pendingStation: RadioStation? = null
     private var pendingContext: Context? = null
@@ -153,30 +136,17 @@ class RadioPlayer {
         p.volume = volume
         p.prepare()
         p.playWhenReady = true
-
-        requestAudioFocus(context)
-    }
-
-    private fun requestAudioFocus(context: Context) {
-        if (audioFocusManager == null) {
-            audioFocusManager = AudioFocusManager().also { it.setCallback(audioFocusCallback) }
-        }
-        audioFocusManager?.requestAudioFocus(context)
     }
 
     fun pause() {
         player?.playWhenReady = false
         _isPlaying.value = false
-        appContext?.let { audioFocusManager?.abandonAudioFocus(it) }
     }
 
     fun togglePlayPause(context: Context) {
         val p = player ?: return
         p.playWhenReady = !p.playWhenReady
         _isPlaying.value = p.playWhenReady
-        if (p.playWhenReady) {
-            requestAudioFocus(context)
-        }
     }
 
     fun stop() {

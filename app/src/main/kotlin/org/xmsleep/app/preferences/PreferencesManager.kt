@@ -41,6 +41,11 @@ object PreferencesManager {
     private val KEY_PRESET2_REMOTE_PINNED = Constants.PrefsKeys.PRESET2_REMOTE_PINNED
     private val KEY_PRESET3_REMOTE_PINNED = Constants.PrefsKeys.PRESET3_REMOTE_PINNED
     private val KEY_ACTIVE_PRESET = Constants.PrefsKeys.ACTIVE_PRESET
+    private val KEY_PRESET_LIST = Constants.PrefsKeys.PRESET_LIST
+    private val KEY_PRESET_NAME_PREFIX = Constants.PrefsKeys.PRESET_NAME_PREFIX
+    private val KEY_PRESET_LOCAL_PREFIX = Constants.PrefsKeys.PRESET_LOCAL_PREFIX
+    private val KEY_PRESET_REMOTE_PREFIX = Constants.PrefsKeys.PRESET_REMOTE_PREFIX
+    private val MAX_PRESET_COUNT = Constants.PrefsKeys.MAX_PRESET_COUNT
     private val KEY_LOCAL_AUDIO_FAVORITES = Constants.PrefsKeys.LOCAL_AUDIO_FAVORITES
     private val KEY_RECENT_LOCAL_SOUNDS = Constants.PrefsKeys.RECENT_LOCAL_SOUNDS
     private val KEY_RECENT_REMOTE_SOUNDS = Constants.PrefsKeys.RECENT_REMOTE_SOUNDS
@@ -48,41 +53,150 @@ object PreferencesManager {
     private val KEY_VOLUME_PREFIX = Constants.PrefsKeys.VOLUME_PREFIX
     private val KEY_BACKGROUND_SELECTION = Constants.PrefsKeys.BACKGROUND_SELECTION
     private val KEY_AUTO_COUNTDOWN_MINUTES = Constants.PrefsKeys.AUTO_COUNTDOWN_MINUTES
+    private val KEY_LAST_TIMER_MINUTES = Constants.PrefsKeys.LAST_TIMER_MINUTES
     private val KEY_KEEP_SCREEN_ON = Constants.PrefsKeys.KEEP_SCREEN_ON
     private val KEY_SHOW_RECENT_PLAY_DIALOG = Constants.PrefsKeys.SHOW_RECENT_PLAY_DIALOG
     private val KEY_AUTO_PLAY_ON_START = Constants.PrefsKeys.AUTO_PLAY_ON_START
     private val KEY_SHOW_RADIO_TAB = Constants.PrefsKeys.SHOW_RADIO_TAB
     private val KEY_QUOTE_WIDGET_ADDED = Constants.PrefsKeys.QUOTE_WIDGET_ADDED
 
-    // 响应式状态：预设远程固定列表
-    private val _preset1RemotePinned = MutableStateFlow<Set<String>>(emptySet())
-    val preset1RemotePinned: StateFlow<Set<String>> = _preset1RemotePinned.asStateFlow()
+    data class PresetEntry(val id: Int, val name: String)
 
-    private val _preset2RemotePinned = MutableStateFlow<Set<String>>(emptySet())
-    val preset2RemotePinned: StateFlow<Set<String>> = _preset2RemotePinned.asStateFlow()
+    private val _allPresetRemotePinned = MutableStateFlow<Set<String>>(emptySet())
+    val allPresetRemotePinned: StateFlow<Set<String>> = _allPresetRemotePinned.asStateFlow()
 
-    private val _preset3RemotePinned = MutableStateFlow<Set<String>>(emptySet())
-    val preset3RemotePinned: StateFlow<Set<String>> = _preset3RemotePinned.asStateFlow()
-
-    /**
-     * 初始化响应式状态（应在应用启动时调用）
-     */
     fun initialize(context: Context) {
-        _preset1RemotePinned.value = getPresetRemotePinned(context, 1)
-        _preset2RemotePinned.value = getPresetRemotePinned(context, 2)
-        _preset3RemotePinned.value = getPresetRemotePinned(context, 3)
+        migratePresets(context)
+        _allPresetRemotePinned.value = getAllPresetRemotePinned(context)
     }
 
-    /**
-     * 获取指定预设的响应式状态
-     */
-    fun getPresetRemotePinnedState(presetIndex: Int): StateFlow<Set<String>> {
-        return when (presetIndex) {
-            1 -> _preset1RemotePinned
-            2 -> _preset2RemotePinned
-            3 -> _preset3RemotePinned
-            else -> _preset1RemotePinned
+    private fun migratePresets(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        if (prefs.contains(KEY_PRESET_LIST)) {
+            ensureMinimumPresets(prefs, 3)
+            return
         }
+        // 读取旧数据
+        val local1 = prefs.getStringSet(KEY_PRESET1_LOCAL_PINNED, emptySet()) ?: emptySet()
+        val local2 = prefs.getStringSet(KEY_PRESET2_LOCAL_PINNED, emptySet()) ?: emptySet()
+        val local3 = prefs.getStringSet(KEY_PRESET3_LOCAL_PINNED, emptySet()) ?: emptySet()
+        val remote1 = prefs.getStringSet(KEY_PRESET1_REMOTE_PINNED, emptySet()) ?: emptySet()
+        val remote2 = prefs.getStringSet(KEY_PRESET2_REMOTE_PINNED, emptySet()) ?: emptySet()
+        val remote3 = prefs.getStringSet(KEY_PRESET3_REMOTE_PINNED, emptySet()) ?: emptySet()
+        val hasOldData = local1.isNotEmpty() || local2.isNotEmpty() || local3.isNotEmpty() ||
+                remote1.isNotEmpty() || remote2.isNotEmpty() || remote3.isNotEmpty()
+        if (!hasOldData) {
+            createDefaultPresets(prefs)
+            return
+        }
+        // 迁移旧数据
+        val names = listOf("预设1", "预设2", "预设3")
+        val locals = listOf(local1, local2, local3)
+        val remotes = listOf(remote1, remote2, remote3)
+        val ids = mutableListOf<Int>()
+        for (i in 0..2) {
+            if (locals[i].isNotEmpty() || remotes[i].isNotEmpty()) {
+                val id = i + 1
+                ids.add(id)
+                prefs.edit()
+                    .putString(KEY_PRESET_NAME_PREFIX + id, names[i])
+                    .putStringSet(KEY_PRESET_LOCAL_PREFIX + id, locals[i])
+                    .putStringSet(KEY_PRESET_REMOTE_PREFIX + id, remotes[i])
+                    .apply()
+            }
+        }
+        prefs.edit().putString(KEY_PRESET_LIST, ids.joinToString(",")).apply()
+        ensureMinimumPresets(prefs, 3)
+    }
+
+    private fun ensureMinimumPresets(prefs: android.content.SharedPreferences, minCount: Int) {
+        val listStr = prefs.getString(KEY_PRESET_LIST, null)
+        if (listStr.isNullOrBlank()) {
+            createDefaultPresets(prefs)
+            return
+        }
+        val ids = listStr.split(",").mapNotNull { it.toIntOrNull() }.toMutableSet()
+        var changed = false
+        for (i in 1..minCount) {
+            if (!ids.contains(i)) {
+                ids.add(i)
+                prefs.edit()
+                    .putString(KEY_PRESET_NAME_PREFIX + i, "预设$i")
+                    .putStringSet(KEY_PRESET_LOCAL_PREFIX + i, emptySet())
+                    .putStringSet(KEY_PRESET_REMOTE_PREFIX + i, emptySet())
+                    .apply()
+                changed = true
+            }
+        }
+        if (changed) {
+            prefs.edit().putString(KEY_PRESET_LIST, ids.sorted().joinToString(",")).apply()
+        }
+    }
+
+    private fun createDefaultPresets(prefs: android.content.SharedPreferences) {
+        val names = listOf("预设1", "预设2", "预设3")
+        for (i in 0..2) {
+            val id = i + 1
+            prefs.edit()
+                .putString(KEY_PRESET_NAME_PREFIX + id, names[i])
+                .putStringSet(KEY_PRESET_LOCAL_PREFIX + id, emptySet())
+                .putStringSet(KEY_PRESET_REMOTE_PREFIX + id, emptySet())
+                .apply()
+        }
+        prefs.edit().putString(KEY_PRESET_LIST, "1,2,3").apply()
+    }
+
+    fun getPresetList(context: Context): List<PresetEntry> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val listStr = prefs.getString(KEY_PRESET_LIST, null)
+        if (listStr.isNullOrBlank()) return emptyList()
+        return listStr.split(",").mapNotNull { idStr ->
+            val id = idStr.toIntOrNull() ?: return@mapNotNull null
+            val name = prefs.getString(KEY_PRESET_NAME_PREFIX + id, "预设$id") ?: "预设$id"
+            PresetEntry(id, name)
+        }
+    }
+
+    fun savePresetList(context: Context, entries: List<PresetEntry>) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val edit = prefs.edit()
+        edit.putString(KEY_PRESET_LIST, entries.joinToString(",") { it.id.toString() })
+        entries.forEach { entry ->
+            edit.putString(KEY_PRESET_NAME_PREFIX + entry.id, entry.name)
+        }
+        edit.apply()
+    }
+
+    fun addPreset(context: Context, name: String): Int {
+        val entries = getPresetList(context).toMutableList()
+        val maxId = entries.maxOfOrNull { it.id } ?: 0
+        val newId = maxId + 1
+        entries.add(PresetEntry(newId, name))
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString(KEY_PRESET_LIST, entries.joinToString(",") { it.id.toString() })
+            .putString(KEY_PRESET_NAME_PREFIX + newId, name)
+            .putStringSet(KEY_PRESET_LOCAL_PREFIX + newId, emptySet())
+            .putStringSet(KEY_PRESET_REMOTE_PREFIX + newId, emptySet())
+            .apply()
+        return newId
+    }
+
+    fun removePreset(context: Context, id: Int) {
+        val entries = getPresetList(context).filter { it.id != id }
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val edit = prefs.edit()
+        edit.putString(KEY_PRESET_LIST, entries.joinToString(",") { it.id.toString() })
+        edit.remove(KEY_PRESET_NAME_PREFIX + id)
+        edit.remove(KEY_PRESET_LOCAL_PREFIX + id)
+        edit.remove(KEY_PRESET_REMOTE_PREFIX + id)
+        edit.apply()
+        _allPresetRemotePinned.value = getAllPresetRemotePinned(context)
+    }
+
+    fun renamePreset(context: Context, id: Int, name: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_PRESET_NAME_PREFIX + id, name).apply()
     }
     
     /**
@@ -225,7 +339,7 @@ object PreferencesManager {
     /**
      * 获取星空页面列数设置
      */
-    fun getStarSkyColumnsCount(context: Context, default: Int = 2): Int {
+    fun getStarSkyColumnsCount(context: Context, default: Int = 3): Int {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getInt(KEY_STAR_SKY_COLUMNS_COUNT, default)
     }
@@ -361,89 +475,45 @@ object PreferencesManager {
         return prefs.getBoolean(KEY_FLOATING_BUTTON_EXPANDED, default)
     }
     
-    /**
-     * 保存预设的本地声音固定列表
-     * @param presetIndex 预设索引 (1, 2, 3)
-     * @param soundNames 声音名称集合
-     */
-    fun savePresetLocalPinned(context: Context, presetIndex: Int, soundNames: Set<String>) {
+    fun savePresetLocalPinned(context: Context, presetId: Int, soundNames: Set<String>) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val key = when (presetIndex) {
-            1 -> KEY_PRESET1_LOCAL_PINNED
-            2 -> KEY_PRESET2_LOCAL_PINNED
-            3 -> KEY_PRESET3_LOCAL_PINNED
-            else -> return
-        }
-        prefs.edit().putStringSet(key, soundNames).apply()
+        prefs.edit().putStringSet(KEY_PRESET_LOCAL_PREFIX + presetId, soundNames).apply()
     }
-    
-    /**
-     * 获取预设的本地声音固定列表
-     * @param presetIndex 预设索引 (1, 2, 3)
-     */
-    fun getPresetLocalPinned(context: Context, presetIndex: Int): Set<String> {
+
+    fun getPresetLocalPinned(context: Context, presetId: Int): Set<String> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val key = when (presetIndex) {
-            1 -> KEY_PRESET1_LOCAL_PINNED
-            2 -> KEY_PRESET2_LOCAL_PINNED
-            3 -> KEY_PRESET3_LOCAL_PINNED
-            else -> return emptySet()
-        }
-        return prefs.getStringSet(key, emptySet()) ?: emptySet()
+        return prefs.getStringSet(KEY_PRESET_LOCAL_PREFIX + presetId, emptySet()) ?: emptySet()
     }
-    
-    /**
-     * 保存预设的远程声音固定列表
-     * @param presetIndex 预设索引 (1, 2, 3)
-     * @param soundIds 声音ID集合
-     */
-    fun savePresetRemotePinned(context: Context, presetIndex: Int, soundIds: Set<String>) {
+
+    fun savePresetRemotePinned(context: Context, presetId: Int, soundIds: Set<String>) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val key = when (presetIndex) {
-            1 -> KEY_PRESET1_REMOTE_PINNED
-            2 -> KEY_PRESET2_REMOTE_PINNED
-            3 -> KEY_PRESET3_REMOTE_PINNED
-            else -> return
-        }
-        prefs.edit().putStringSet(key, soundIds).apply()
-        // 更新响应式状态
-        when (presetIndex) {
-            1 -> _preset1RemotePinned.value = soundIds
-            2 -> _preset2RemotePinned.value = soundIds
-            3 -> _preset3RemotePinned.value = soundIds
-        }
+        prefs.edit().putStringSet(KEY_PRESET_REMOTE_PREFIX + presetId, soundIds).apply()
+        _allPresetRemotePinned.value = getAllPresetRemotePinned(context)
     }
-    
-    /**
-     * 获取预设的远程声音固定列表
-     * @param presetIndex 预设索引 (1, 2, 3)
-     */
-    fun getPresetRemotePinned(context: Context, presetIndex: Int): Set<String> {
+
+    fun getPresetRemotePinned(context: Context, presetId: Int): Set<String> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val key = when (presetIndex) {
-            1 -> KEY_PRESET1_REMOTE_PINNED
-            2 -> KEY_PRESET2_REMOTE_PINNED
-            3 -> KEY_PRESET3_REMOTE_PINNED
-            else -> return emptySet()
-        }
-        return prefs.getStringSet(key, emptySet()) ?: emptySet()
+        return prefs.getStringSet(KEY_PRESET_REMOTE_PREFIX + presetId, emptySet()) ?: emptySet()
     }
-    
-    /**
-     * 保存当前激活的预设
-     * @param presetIndex 预设索引 (1, 2, 3)
-     */
-    fun saveActivePreset(context: Context, presetIndex: Int) {
+
+    fun getAllPresetRemotePinned(context: Context): Set<String> {
+        val entries = getPresetList(context)
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putInt(KEY_ACTIVE_PRESET, presetIndex).apply()
+        val result = mutableSetOf<String>()
+        entries.forEach { entry ->
+            result.addAll(prefs.getStringSet(KEY_PRESET_REMOTE_PREFIX + entry.id, emptySet()) ?: emptySet())
+        }
+        return result
     }
-    
-    /**
-     * 获取当前激活的预设
-     */
+
+    fun saveActivePreset(context: Context, presetId: Int) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putInt(KEY_ACTIVE_PRESET, presetId).apply()
+    }
+
     fun getActivePreset(context: Context): Int {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getInt(KEY_ACTIVE_PRESET, 1) // 默认为预设1
+        return prefs.getInt(KEY_ACTIVE_PRESET, 1)
     }
     
     /**
@@ -631,6 +701,16 @@ object PreferencesManager {
         return prefs.getInt(KEY_AUTO_COUNTDOWN_MINUTES, 0)
     }
     
+    fun saveLastTimerMinutes(context: Context, minutes: Int) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putInt(KEY_LAST_TIMER_MINUTES, minutes).apply()
+    }
+
+    fun getLastTimerMinutes(context: Context): Int {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getInt(KEY_LAST_TIMER_MINUTES, 0)
+    }
+
     /**
      * 保存屏幕常亮设置
      * @param keepScreenOn 是否保持屏幕常亮

@@ -11,6 +11,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -30,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -43,8 +43,10 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.xmsleep.app.Constants
 import org.xmsleep.app.R
 import org.xmsleep.app.audio.AudioManager
+import org.xmsleep.app.preferences.PreferencesManager
 import org.xmsleep.app.utils.Logger
 
 /**
@@ -74,66 +76,93 @@ internal fun DefaultArea(
     onRemoteCardClick: (org.xmsleep.app.audio.model.SoundMetadata) -> Unit = {},
     getSoundDisplayName: (org.xmsleep.app.audio.model.SoundMetadata) -> String = { it.name },
     scope: CoroutineScope = rememberCoroutineScope(),
-    resourceManager: org.xmsleep.app.audio.AudioResourceManager = remember { org.xmsleep.app.audio.AudioResourceManager.getInstance(context) }
+    resourceManager: org.xmsleep.app.audio.AudioResourceManager = remember { org.xmsleep.app.audio.AudioResourceManager.getInstance(context) },
+    presetList: List<PreferencesManager.PresetEntry> = emptyList(),
+    verticalLayout: Boolean = false,
+    onAddPreset: () -> Unit = {},
+    onRenamePreset: (Int) -> Unit = {},
+    onDeletePreset: (Int) -> Unit = {}
 ) {
     val defaultItems = remember(activePreset, pinnedSounds.value) {
         soundItems.filter { pinnedSounds.value.contains(it.sound) }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        androidx.compose.animation.AnimatedVisibility(
-            visible = isExpanded,
-            enter = fadeIn(animationSpec = tween(durationMillis = 150, easing = LinearEasing)) +
-                    expandVertically(animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 150, easing = LinearEasing)) +
-                    shrinkVertically(animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing))
-        ) {
+        if (isExpanded) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Tab 切换行
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // 预设切换行（滚动式 chip）
+                if (presetList.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 16.dp)
                     ) {
-                        listOf(1 to R.string.preset_1, 2 to R.string.preset_2, 3 to R.string.preset_3).forEach { (preset, labelRes) ->
-                            Surface(
-                                onClick = { onActivePresetChange(preset) },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (activePreset == preset) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                                modifier = Modifier.height(36.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = context.getString(labelRes),
-                                        fontWeight = if (activePreset == preset) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (activePreset == preset) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                        LazyRow(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(presetList) { entry ->
+                                FilterChip(
+                                    onClick = { if (isEditMode) onRenamePreset(entry.id) else onActivePresetChange(entry.id) },
+                                    label = { Text(entry.name) },
+                                    selected = activePreset == entry.id,
+                                    trailingIcon = if (isEditMode && presetList.size > 1) {
+                                        {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(start = 4.dp)
+                                                    .size(22.dp)
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f))
+                                                    .clickable { onDeletePreset(entry.id) },
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Clear,
+                                                    contentDescription = context.getString(R.string.remove),
+                                                    modifier = Modifier.size(14.dp),
+                                                    tint = MaterialTheme.colorScheme.onErrorContainer
+                                                )
+                                            }
+                                        }
+                                    } else null
+                                )
                             }
                         }
-                    }
-                    // 编辑按钮
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(30.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                        if (!isEditMode && presetList.size < Constants.PrefsKeys.MAX_PRESET_COUNT) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .widthIn(min = 32.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .clickable { onAddPreset() },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "+",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.width(0.dp))
+                        }
+                        // 编辑按钮
                         if (showEditButton) {
-                            val editButtonAlpha = if (isExpanded) 1f else 0.4f
                             if (isEditMode) {
                                 Surface(
-                                    onClick = { if (isExpanded) onEditModeChange(!isEditMode) },
+                                    onClick = { onEditModeChange(false) },
                                     shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.height(40.dp).alpha(editButtonAlpha)
+                                    modifier = Modifier.height(40.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxHeight(),
@@ -155,19 +184,27 @@ internal fun DefaultArea(
                                 }
                             } else {
                                 IconButton(
-                                    onClick = { if (isExpanded) onEditModeChange(!isEditMode) },
-                                    enabled = isExpanded,
-                                    modifier = Modifier.size(40.dp).alpha(editButtonAlpha)
+                                    onClick = { onEditModeChange(true) },
+                                    modifier = Modifier.size(40.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
                                         contentDescription = context.getString(R.string.edit),
-                                        tint = if (isExpanded) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
                         }
+                    }
+
+                    if (isEditMode) {
+                        Text(
+                            text = context.getString(R.string.preset_rename_hint),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     }
                 }
 
@@ -178,11 +215,7 @@ internal fun DefaultArea(
                         .padding(horizontal = 16.dp)
                 ) {
                     val pinnedRemoteSounds = remoteSounds.filter { remotePinned.contains(it.id) }
-                    val maxLocalItems = minOf(defaultItems.size, 10)
-                    val maxRemoteItems = minOf(pinnedRemoteSounds.size, 10 - maxLocalItems)
-                    val displayedLocalItems = defaultItems.take(maxLocalItems)
-                    val displayedRemoteSounds = pinnedRemoteSounds.take(maxRemoteItems)
-                    val allDefaultItems = displayedLocalItems.size + displayedRemoteSounds.size
+                    val allDefaultItems = defaultItems.size + pinnedRemoteSounds.size
 
                     if (allDefaultItems == 0) {
                         Box(
@@ -198,85 +231,233 @@ internal fun DefaultArea(
                         }
                     }
 
-                    LazyRow(
-                        contentPadding = PaddingValues(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(displayedLocalItems) { item ->
-                            var showVolumeDialog by remember { mutableStateOf(false) }
-                            DefaultCard(
-                                modifier = Modifier.width(100.dp),
-                                item = item,
-                                isPlaying = playingStates[item.sound] ?: false,
-                                showPlayingIndicator = (playingStates[item.sound] == true) && (soundPlayingPreset[item.sound] == activePreset),
-                                isEditMode = isEditMode,
-                                onToggle = { sound ->
-                                    Logger.d("SoundsScreen", "DefaultCard onToggle: ${sound.name}")
-                                    val wasPlaying = audioManager.isPlayingSound(sound)
-                                    if (wasPlaying) {
-                                        audioManager.pauseSound(sound)
-                                        playingStates[sound] = false
-                                        soundPlayingPreset.remove(sound)
-                                    } else {
-                                        playingStates[sound] = true
-                                        soundPlayingPreset[sound] = activePreset
-                                        audioManager.playSound(context, sound)
-                                        scope.launch {
-                                            delay(200)
-                                            playingStates[sound] = audioManager.isPlayingSound(sound)
+                    if (verticalLayout) {
+                        val presetCacheManager = remember { org.xmsleep.app.audio.AudioCacheManager.getInstance(context) }
+                        LazyColumn(
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(defaultItems) { item: SoundItem ->
+                                PresetCard(
+                                    name = item.name,
+                                    isPlaying = (playingStates[item.sound] == true) && (soundPlayingPreset[item.sound] == activePreset),
+                                    isEditMode = isEditMode,
+                                    onToggle = {
+                                        val wasPlaying = audioManager.isPlayingSound(item.sound)
+                                        if (wasPlaying) {
+                                            audioManager.pauseSound(item.sound)
+                                            playingStates[item.sound] = false
+                                            soundPlayingPreset.remove(item.sound)
+                                        } else {
+                                            playingStates[item.sound] = true
+                                            soundPlayingPreset[item.sound] = activePreset
+                                            audioManager.playSound(context, item.sound)
+                                            scope.launch {
+                                                delay(200)
+                                                playingStates[item.sound] = audioManager.isPlayingSound(item.sound)
+                                            }
                                         }
-                                    }
-                                },
-                                onRemove = {
-                                    val currentSet = pinnedSounds.value.toMutableSet()
-                                    currentSet.remove(item.sound)
-                                    pinnedSounds.value = currentSet
-                                },
-                                onPinnedChange = { isPinned ->
-                                    val currentSet = pinnedSounds.value.toMutableSet()
-                                    if (isPinned) {
-                                        currentSet.add(item.sound)
-                                        playingStates[item.sound] = audioManager.isPlayingSound(item.sound)
-                                    } else {
+                                    },
+                                    onRemove = {
+                                        val currentSet = pinnedSounds.value.toMutableSet()
                                         currentSet.remove(item.sound)
-                                    }
-                                    pinnedSounds.value = currentSet
-                                    onPinnedChange(item.sound, isPinned)
-                                }
-                            )
-                            if (showVolumeDialog) {
-                                VolumeDialog(
-                                    sound = item.sound,
-                                    currentVolume = audioManager.getVolume(item.sound),
-                                    onDismiss = { showVolumeDialog = false },
-                                    onVolumeChange = { audioManager.setVolume(item.sound, it) }
+                                        pinnedSounds.value = currentSet
+                                        if (audioManager.isPlayingSound(item.sound)) {
+                                            audioManager.pauseSound(item.sound)
+                                            playingStates[item.sound] = false
+                                        }
+                                    },
+                                    isLocal = true
+                                )
+                            }
+                            items(pinnedRemoteSounds) { sound: org.xmsleep.app.audio.model.SoundMetadata ->
+                                val downloadProgress = downloadingSounds[sound.id]
+                                val isPlaying = playingRemoteSounds.contains(sound.id)
+                                PresetCard(
+                                    name = getSoundDisplayName(sound),
+                                    isPlaying = isPlaying,
+                                    isEditMode = isEditMode,
+                                    isCached = presetCacheManager.getCachedFile(sound.id) != null,
+                                    isDownloading = downloadProgress != null,
+                                    downloadProgress = downloadProgress,
+                                    onToggle = { onRemoteCardClick(sound) },
+                                    onRemove = {
+                                        onRemotePinnedChange(sound.id, false)
+                                        audioManager.pauseRemoteSound(sound.id)
+                                    },
+                                    isLocal = false
                                 )
                             }
                         }
-
-                        items(displayedRemoteSounds) { sound ->
-                            val downloadProgress = downloadingSounds[sound.id]
-                            val isPlaying = playingRemoteSounds.contains(sound.id)
-                            Box(modifier = Modifier.width(100.dp)) {
-                                org.xmsleep.app.ui.starsky.RemoteSoundCard(
-                                    sound = sound,
-                                    displayName = getSoundDisplayName(sound),
-                                    isPlaying = isPlaying,
-                                    downloadProgress = downloadProgress,
-                                    columnsCount = 3,
-                                    isPinned = remotePinned.contains(sound.id),
-                                    onPinnedChange = { isPinned -> onRemotePinnedChange(sound.id, isPinned) },
-                                    onCardClick = { onRemoteCardClick(sound) },
-                                    onVolumeClick = { },
-                                    cardHeight = 80.dp,
+                    } else {
+                        LazyRow(
+                            contentPadding = PaddingValues(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(defaultItems) { item ->
+                                DefaultCard(
+                                    modifier = Modifier.width(100.dp),
+                                    item = item,
+                                    isPlaying = playingStates[item.sound] ?: false,
+                                    showPlayingIndicator = (playingStates[item.sound] == true) && (soundPlayingPreset[item.sound] == activePreset),
                                     isEditMode = isEditMode,
-                                    onRemove = { onRemotePinnedChange(sound.id, false) },
-                                    isInPresetDialog = true
+                                    onToggle = { sound ->
+                                        Logger.d("SoundsScreen", "DefaultCard onToggle: ${sound.name}")
+                                        val wasPlaying = audioManager.isPlayingSound(sound)
+                                        if (wasPlaying) {
+                                            audioManager.pauseSound(sound)
+                                            playingStates[sound] = false
+                                            soundPlayingPreset.remove(sound)
+                                        } else {
+                                            playingStates[sound] = true
+                                            soundPlayingPreset[sound] = activePreset
+                                            audioManager.playSound(context, sound)
+                                            scope.launch {
+                                                delay(200)
+                                                playingStates[sound] = audioManager.isPlayingSound(sound)
+                                            }
+                                        }
+                                    },
+                                    onRemove = {
+                                        val currentSet = pinnedSounds.value.toMutableSet()
+                                        currentSet.remove(item.sound)
+                                        pinnedSounds.value = currentSet
+                                        if (audioManager.isPlayingSound(item.sound)) {
+                                            audioManager.pauseSound(item.sound)
+                                            playingStates[item.sound] = false
+                                        }
+                                    },
+                                    onPinnedChange = { isPinned ->
+                                        val currentSet = pinnedSounds.value.toMutableSet()
+                                        if (isPinned) {
+                                            currentSet.add(item.sound)
+                                            playingStates[item.sound] = audioManager.isPlayingSound(item.sound)
+                                        } else {
+                                            currentSet.remove(item.sound)
+                                        }
+                                        pinnedSounds.value = currentSet
+                                        onPinnedChange(item.sound, isPinned)
+                                    }
                                 )
+                            }
+
+                            items(pinnedRemoteSounds) { sound ->
+                                val downloadProgress = downloadingSounds[sound.id]
+                                val isPlaying = playingRemoteSounds.contains(sound.id)
+                                Box(modifier = Modifier.width(100.dp)) {
+                                    org.xmsleep.app.ui.starsky.RemoteSoundCard(
+                                        sound = sound,
+                                        displayName = getSoundDisplayName(sound),
+                                        isPlaying = isPlaying,
+                                        downloadProgress = downloadProgress,
+                                        columnsCount = 3,
+                                        isPinned = remotePinned.contains(sound.id),
+                                        onPinnedChange = { isPinned -> onRemotePinnedChange(sound.id, isPinned) },
+                                        onCardClick = { onRemoteCardClick(sound) },
+                                        onVolumeClick = { },
+                                        cardHeight = 80.dp,
+                                        isEditMode = isEditMode,
+                                        onRemove = {
+                                            onRemotePinnedChange(sound.id, false)
+                                            audioManager.pauseRemoteSound(sound.id)
+                                        },
+                                        isInPresetDialog = true
+                                    )
+                                }
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun PresetCard(
+    name: String,
+    isPlaying: Boolean,
+    isEditMode: Boolean,
+    isLocal: Boolean,
+    isCached: Boolean = false,
+    isDownloading: Boolean = false,
+    downloadProgress: Float? = null,
+    onToggle: () -> Unit,
+    onRemove: () -> Unit
+) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .clickable(enabled = !isEditMode) { onToggle() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (isPlaying) 1f else 0.9f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (isPlaying) {
+                    AudioVisualizer(
+                        isPlaying = true,
+                        modifier = Modifier.size(24.dp, 16.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                if (!isLocal) {
+                    if (isDownloading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else if (isCached) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Cloud,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            if (isEditMode) {
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = context.getString(R.string.remove),
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }

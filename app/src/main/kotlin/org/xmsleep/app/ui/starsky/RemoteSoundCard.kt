@@ -1,11 +1,15 @@
 package org.xmsleep.app.ui.starsky
 
 import android.widget.Toast
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -17,7 +21,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -30,10 +39,7 @@ import org.xmsleep.app.R
 import org.xmsleep.app.ui.AudioVisualizer
 import org.xmsleep.app.utils.ToastUtils
 
-/**
- * 远程音频卡片组件
- * 用于星空页面和快捷播放模块
- */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RemoteSoundCard(
     sound: org.xmsleep.app.audio.model.SoundMetadata,
@@ -41,7 +47,7 @@ fun RemoteSoundCard(
     isPlaying: Boolean,
     downloadProgress: Float?,
     isDownloadingButNoProgress: Boolean = false,
-    columnsCount: Int = 2,
+    columnsCount: Int = 3,
     isPinned: Boolean = false,
     onPinnedChange: (Boolean) -> Unit = {},
     onCardClick: () -> Unit,
@@ -49,19 +55,17 @@ fun RemoteSoundCard(
     cardHeight: Dp? = null,
     isEditMode: Boolean = false,
     onRemove: () -> Unit = {},
-    isInPresetDialog: Boolean = false, // 新增参数：是否在预设弹窗中
+    isInPresetDialog: Boolean = false,
 ) {
     val context = LocalContext.current
-    val cacheManager = remember { 
-        org.xmsleep.app.audio.AudioCacheManager.getInstance(context) 
+    val cacheManager = remember {
+        org.xmsleep.app.audio.AudioCacheManager.getInstance(context)
     }
     var isCached by remember(sound.id) {
         mutableStateOf(cacheManager.getCachedFile(sound.id) != null)
     }
 
-    // 统一的缓存状态同步：监听下载进度变化
     LaunchedEffect(downloadProgress, sound.id) {
-        // 单卡下载完成后检查
         if (downloadProgress == null || downloadProgress >= 1.0f) {
             delay(200)
             val newCached = cacheManager.getCachedFile(sound.id) != null
@@ -71,7 +75,6 @@ fun RemoteSoundCard(
         }
     }
 
-    // 初始渲染时再次确认缓存状态
     LaunchedEffect(Unit) {
         delay(100)
         val cached = cacheManager.getCachedFile(sound.id) != null
@@ -79,86 +82,466 @@ fun RemoteSoundCard(
             isCached = cached
         }
     }
-    
+
     val alpha by animateFloatAsState(
         targetValue = if (isPlaying) 1f else 0.6f,
         label = "alpha"
     )
-    
-    val cardBackgroundColor = if (isInPresetDialog) {
-        // 预设弹窗中：使用完全不透明的背景色，适配主题
-        if (isCached) {
-            MaterialTheme.colorScheme.surfaceContainer // 已下载使用较深的背景色
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow // 未下载使用较浅的背景色
-        }
-    } else {
-        // 繁星页面中：使用半透明背景色
-        if (isCached) {
-            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f) // 已下载使用较深的背景色
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f) // 未下载使用正常背景色
-        }
-    }
-    
+
     var showTitleMenu by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    
-    val finalCardHeight = cardHeight ?: if (columnsCount == 3) 80.dp else 100.dp
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(finalCardHeight)
-            .then(
-                if (!isEditMode) {
-                    Modifier.pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { onCardClick() },
-                            onLongPress = { 
-                                scope.launch {
-                                    showTitleMenu = true
+
+        val finalCardHeight = cardHeight ?: if (columnsCount == 3) 110.dp else 120.dp
+
+    if (isInPresetDialog) {
+        val cardBackgroundColor = if (isCached) {
+            MaterialTheme.colorScheme.surfaceContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(finalCardHeight)
+                .then(
+                    if (!isEditMode) {
+                        Modifier.pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = { onCardClick() },
+                                onLongPress = {
+                                    scope.launch {
+                                        showTitleMenu = true
+                                    }
                                 }
-                            }
+                            )
+                        }
+                    } else {
+                        Modifier
+                    }
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = cardBackgroundColor
+            )
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                val padding = if (finalCardHeight == 80.dp) 12.dp else 16.dp
+                val textStyle = if (finalCardHeight == 80.dp) {
+                    MaterialTheme.typography.titleSmall
+                } else {
+                    MaterialTheme.typography.titleMedium
+                }
+                val maxLines = if (finalCardHeight == 80.dp) 1 else 2
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    Box(modifier = Modifier.align(Alignment.TopStart)) {
+                        Text(
+                            text = displayName,
+                            style = textStyle,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .alpha(alpha)
+                                .padding(end = 32.dp),
+                            maxLines = maxLines,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
-                } else {
-                    Modifier
+
+                    if (!isEditMode) {
+                        Box(modifier = Modifier.align(Alignment.TopStart)) {
+                            DropdownMenu(
+                                expanded = showTitleMenu,
+                                onDismissRequest = { showTitleMenu = false },
+                                modifier = Modifier.width(120.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = if (isPinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(20.dp),
+                                                tint = if (isPinned) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                            Text(
+                                                text = if (isPinned) {
+                                                    context.getString(R.string.cancel_default)
+                                                } else {
+                                                    context.getString(R.string.set_as_default)
+                                                },
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = if (isPinned) {
+                                                    MaterialTheme.colorScheme.primary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface
+                                                }
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        val newPinnedState = !isPinned
+                                        if (newPinnedState && !isCached) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.must_download_before_pin),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        } else {
+                                            onPinnedChange(newPinnedState)
+                                            showTitleMenu = false
+                                            val toastMessage = if (newPinnedState) {
+                                                context.getString(R.string.pinned_success)
+                                            } else {
+                                                context.getString(R.string.unpinned_success)
+                                            }
+                                            ToastUtils.showToast(context, toastMessage)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    if (isPlaying) {
+                        AudioVisualizer(
+                            isPlaying = isPlaying,
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .size(24.dp, 16.dp)
+                                .alpha(alpha),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    if (isEditMode) {
+                        IconButton(
+                            onClick = onRemove,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .offset(y = 8.dp)
+                                .size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = context.getString(R.string.remove),
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+
+                    if (isPlaying && cardHeight == null && !isEditMode) {
+                        IconButton(
+                            onClick = onVolumeClick,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .offset(x = 10.dp, y = 12.dp)
+                                .size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = context.getString(R.string.adjust_volume),
+                                modifier = Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = cardBackgroundColor
-        )
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            val padding = if (finalCardHeight == 80.dp) 12.dp else 16.dp
-            val textStyle = if (finalCardHeight == 80.dp) {
-                MaterialTheme.typography.titleSmall
-            } else {
-                MaterialTheme.typography.titleMedium
+
+                if (isDownloadingButNoProgress && (downloadProgress == null || downloadProgress == 0f)) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(24.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 12.dp,
+                                    bottomEnd = 0.dp,
+                                    bottomStart = 12.dp
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 1.5.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else if (downloadProgress != null && downloadProgress > 0f && downloadProgress < 1f) {
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .size(24.dp)
+                            .background(
+                                color = if (isCached) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                },
+                                shape = RoundedCornerShape(
+                                    topStart = 0.dp,
+                                    topEnd = 12.dp,
+                                    bottomEnd = 0.dp,
+                                    bottomStart = 12.dp
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isCached) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = context.getString(R.string.downloaded),
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.CloudDownload,
+                                contentDescription = context.getString(R.string.cloud_audio),
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+
+                if (downloadProgress != null && downloadProgress > 0f) {
+                    LinearProgressIndicator(
+                        progress = { downloadProgress },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(6.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    )
+                }
             }
-            val maxLines = if (finalCardHeight == 80.dp) 1 else 2
-            
+        }
+    } else {
+        val cardPadding = if (finalCardHeight <= 96.dp) 10.dp else 12.dp
+        val circleSize = if (columnsCount == 3) 60.dp else 72.dp
+        val iconSize = if (columnsCount == 3) 36.dp else 45.dp
+
+        val circleAlpha by animateFloatAsState(
+            targetValue = when {
+                isPlaying -> 1f
+                isCached -> 0.6f
+                else -> 0.4f
+            },
+            label = "circleAlpha"
+        )
+
+        val titleAndIconAlpha by animateFloatAsState(
+            targetValue = when {
+                isPlaying -> 1f
+                isCached -> 0.6f
+                else -> 0.4f
+            },
+            label = "titleAndIconAlpha"
+        )
+
+        val pulseInfiniteTransition = rememberInfiniteTransition(label = "pulse")
+        val pulseGlowAlpha by pulseInfiniteTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 0.7f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1500, easing = EaseInOutCubic),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "pulseGlowAlpha"
+        )
+        val isDownloading = isDownloadingButNoProgress ||
+                (downloadProgress != null && downloadProgress > 0f && downloadProgress < 1f)
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(finalCardHeight)
+                .clip(RoundedCornerShape(16.dp))
+                .then(
+                    if (!isEditMode) {
+                        Modifier.combinedClickable(
+                            onClick = onCardClick,
+                            onLongClick = { showTitleMenu = true }
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
+                    .padding(horizontal = cardPadding)
             ) {
-                // 标题
-                Box(modifier = Modifier.align(Alignment.TopStart)) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Glow ring wrapper
+                    Box(
+                        modifier = Modifier.size(circleSize),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Pulse glow (when playing)
+                        if (isPlaying) {
+                            val glowColor = MaterialTheme.colorScheme.primary
+                            Box(
+                                modifier = Modifier
+                                    .size(circleSize)
+                                    .graphicsLayer {
+                                        this.alpha = pulseGlowAlpha
+                                    }
+                                    .drawBehind {
+                                        val radius = size.minDimension / 2f
+                                        drawCircle(
+                                            brush = Brush.radialGradient(
+                                                colors = listOf(
+                                                    glowColor.copy(alpha = 0.8f),
+                                                    glowColor.copy(alpha = 0.0f)
+                                                ),
+                                                center = center,
+                                                radius = radius
+                                            ),
+                                            radius = radius,
+                                            center = center
+                                        )
+                                    }
+                            )
+                        }
+
+                        // Main circle
+                        Box(
+                            modifier = Modifier
+                                .size(circleSize)
+                                .clip(CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isPlaying) {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                                        }
+                                    )
+                                    .graphicsLayer(alpha = circleAlpha)
+                            )
+
+                            if (isDownloading) {
+                                if (isDownloadingButNoProgress && (downloadProgress == null || downloadProgress <= 0f)) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.fillMaxSize(),
+                                        strokeWidth = 2.5.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                } else if (downloadProgress != null && downloadProgress > 0f && downloadProgress < 1f) {
+                                    CircularProgressIndicator(
+                                        progress = { downloadProgress },
+                                        modifier = Modifier.fillMaxSize(),
+                                        strokeWidth = 2.5.dp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                    )
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                val pulseIconAlpha by pulseInfiniteTransition.animateFloat(
+                                    initialValue = 0.6f,
+                                    targetValue = 1f,
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(1500, easing = EaseInOutCubic),
+                                        repeatMode = RepeatMode.Reverse
+                                    ),
+                                    label = "pulseIconAlpha"
+                                )
+                                val pulseIconScale by pulseInfiniteTransition.animateFloat(
+                                    initialValue = 0.9f,
+                                    targetValue = 1.05f,
+                                    animationSpec = infiniteRepeatable(
+                                        animation = tween(1500, easing = EaseInOutCubic),
+                                        repeatMode = RepeatMode.Reverse
+                                    ),
+                                    label = "pulseIconScale"
+                                )
+                                Icon(
+                                    imageVector = getSoundIcon(sound),
+                                    contentDescription = displayName,
+                                    modifier = Modifier
+                                        .size(iconSize)
+                                        .graphicsLayer {
+                                            if (isPlaying) {
+                                                this.alpha = pulseIconAlpha
+                                                this.scaleX = pulseIconScale
+                                                this.scaleY = pulseIconScale
+                                            }
+                                        },
+                                    tint = when {
+                                        isPlaying -> Color.White
+                                        isCached -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
                         text = displayName,
-                        style = textStyle,
+                        style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .alpha(alpha)
-                            .padding(end = 32.dp), // 为右上角图标留出空间
-                        maxLines = maxLines,
+                            .alpha(titleAndIconAlpha)
+                            .clickable { onVolumeClick() },
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                
-                // 菜单
+
+                if (isEditMode) {
+                    IconButton(
+                        onClick = onRemove,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(y = 4.dp)
+                            .size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = context.getString(R.string.remove),
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
                 if (!isEditMode) {
                     Box(modifier = Modifier.align(Alignment.TopStart)) {
                         DropdownMenu(
@@ -200,16 +583,13 @@ fun RemoteSoundCard(
                                 },
                                 onClick = {
                                     val newPinnedState = !isPinned
-                                    // 如果是要固定，先检查是否已下载
                                     if (newPinnedState && !isCached) {
-                                        // 未下载，显示提示但不调用回调
                                         Toast.makeText(
                                             context,
                                             context.getString(R.string.must_download_before_pin),
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     } else {
-                                        // 允许操作
                                         onPinnedChange(newPinnedState)
                                         showTitleMenu = false
                                         val toastMessage = if (newPinnedState) {
@@ -223,133 +603,7 @@ fun RemoteSoundCard(
                             )
                         }
                     }
-            }
-                
-                // 音频可视化器
-                if (isPlaying) {
-                    AudioVisualizer(
-                        isPlaying = isPlaying,
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .size(24.dp, 16.dp)
-                            .alpha(alpha),
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
-                
-                // 删除按钮（编辑模式）
-                if (isEditMode) {
-                    IconButton(
-                        onClick = onRemove,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset(y = 8.dp)
-                            .size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = context.getString(R.string.remove),
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-                
-                // 音量按钮
-                if (isPlaying && cardHeight == null && !isEditMode) {
-                    IconButton(
-                        onClick = onVolumeClick,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset(x = 10.dp, y = 12.dp)
-                            .size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = context.getString(R.string.adjust_volume),
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-            
-            // 状态图标（右上角角标 - 在外层Box，完全贴合卡片边缘）
-            if (isDownloadingButNoProgress && (downloadProgress == null || downloadProgress == 0f)) {
-                // 加载指示器
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(24.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 12.dp, // 跟随卡片的圆角
-                                bottomEnd = 0.dp,
-                                bottomStart = 12.dp
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(14.dp),
-                        strokeWidth = 1.5.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            } else if (downloadProgress != null && downloadProgress > 0f && downloadProgress < 1f) {
-                // 下载中，不显示图标（底部有进度条）
-            } else {
-                // 显示状态角标
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(24.dp)
-                        .background(
-                            color = if (isCached) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.surfaceContainerHigh
-                            },
-                            shape = RoundedCornerShape(
-                                topStart = 0.dp,
-                                topEnd = 12.dp, // 跟随卡片的圆角
-                                bottomEnd = 0.dp,
-                                bottomStart = 12.dp
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isCached) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = context.getString(R.string.downloaded),
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.CloudDownload,
-                            contentDescription = context.getString(R.string.cloud_audio),
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-            }
-            
-            // 下载进度条
-            if (downloadProgress != null && downloadProgress > 0f) {
-                LinearProgressIndicator(
-                    progress = { downloadProgress },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(6.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                )
             }
         }
     }

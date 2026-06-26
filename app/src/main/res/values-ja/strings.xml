@@ -119,9 +119,13 @@
     <string name="cancel_favorite">お気に入り解除</string>
     <string name="pinned_success">プリセットに追加しました</string>
     <string name="unpinned_success">プリセットから削除しました</string>
+    <string name="rename_preset">プリセット名を変更</string>
+    <string name="new_preset">新規プリセット</string>
+    <string name="preset_name_template">プリセット%d</string>
     <string name="favorited_success">お気に入りに追加しました</string>
     <string name="unfavorited_success">お気に入り解除しました</string>
     <string name="current_countdown">現在のカウントダウン: %1$s</string>
+    <string name="last_timer_hint">前回のタイマー: %1$s</string>
     <string name="please_play_sound_before_timer">カウントダウンを設定する前にサウンドを再生してください</string>
     <string name="quick_select">クイック選択</string>
     <string name="tab_builtin">内蔵</string>
@@ -245,6 +249,8 @@
     <string name="sound_default">サウンド</string>
     
     <!-- Preset Empty State Hint -->
+    <string name="preset_rename_hint">プリセット名をタップして変更</string>
+    
     <string name="preset_empty_hint">サウンドカードを長押しして追加</string>
     <string name="close">閉じる</string>
     

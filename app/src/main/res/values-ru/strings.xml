@@ -119,9 +119,13 @@
     <string name="cancel_favorite">Убрать из избранного</string>
     <string name="pinned_success">Добавлено в пресет</string>
     <string name="unpinned_success">Удалено из пресета</string>
+    <string name="rename_preset">Переименовать пресет</string>
+    <string name="new_preset">Новый пресет</string>
+    <string name="preset_name_template">Пресет %d</string>
     <string name="favorited_success">Добавлено в избранное</string>
     <string name="unfavorited_success">Удалено из избранного</string>
     <string name="current_countdown">Текущий таймер: %1$s</string>
+    <string name="last_timer_hint">Последний таймер: %1$s</string>
     <string name="please_play_sound_before_timer">Пожалуйста, включите звук перед установкой таймера</string>
     <string name="quick_select">Быстрый выбор</string>
     <string name="tab_builtin">Встроен</string>
@@ -245,6 +249,8 @@
     <string name="sound_default">Звук</string>
     
     <!-- Preset Empty State Hint -->
+    <string name="preset_rename_hint">Нажмите на название пресета для изменения</string>
+    
     <string name="preset_empty_hint">Долгое нажатие на карточку для добавления</string>
     <string name="close">Закрыть</string>
     

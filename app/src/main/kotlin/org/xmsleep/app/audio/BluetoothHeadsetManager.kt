@@ -1,5 +1,7 @@
 package org.xmsleep.app.audio
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothHeadset
 import android.bluetooth.BluetoothProfile
@@ -123,6 +125,7 @@ class BluetoothHeadsetManager private constructor() {
     /**
      * 检查当前是否连接了蓝牙耳机
      */
+    @SuppressLint("MissingPermission")
     fun isBluetoothHeadsetConnected(context: Context): Boolean {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -136,8 +139,10 @@ class BluetoothHeadsetManager private constructor() {
             } else {
                 // Android 6.0 以下使用 BluetoothAdapter
                 val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-                bluetoothAdapter?.isEnabled == true &&
-                bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET) == BluetoothProfile.STATE_CONNECTED
+                @Suppress("WrongConstant")
+                val connected = bluetoothAdapter?.isEnabled == true &&
+                    bluetoothAdapter.getProfileConnectionState(BluetoothProfile.HEADSET) == BluetoothProfile.STATE_CONNECTED
+                connected
             }
         } catch (e: Exception) {
             Logger.e(TAG, "检查蓝牙耳机连接状态失败: ${e.message}")
